@@ -2,7 +2,7 @@ services:
   calendar:
     build:
       context: .
-      dockerfile: cmd/handyman-duty/Dockerfile
+      dockerfile: cmd/calendar/Dockerfile
     image: calendar:latest
     ports:
       - "8080:8080"

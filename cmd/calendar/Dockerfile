@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1
 
 # Build this from the repository root (the build context must include
-# go.mod, go.sum, internal/, and cmd/handyman-duty/), e.g.:
-#   docker build -f cmd/handyman-duty/Dockerfile -t calendar .
+# go.mod, go.sum, internal/, and cmd/calendar/), e.g.:
+#   docker build -f cmd/calendar/Dockerfile -t calendar .
 
 # ---------------------------------------------------------------------------
 # Build stage: compile a fully static binary (CGO disabled) so it can run
@@ -22,7 +22,7 @@ ARG TARGETOS
 ARG TARGETARCH
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
     go build -trimpath -ldflags="-s -w -extldflags=-static" \
-    -o /out/calendar ./cmd/handyman-duty
+    -o /out/calendar ./cmd/calendar
 
 # ---------------------------------------------------------------------------
 # Runtime stage: distroless "static" -- just ca-certificates, tzdata, and a

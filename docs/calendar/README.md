@@ -1,9 +1,8 @@
-# Design notes: handyman-duty
+# Design notes: calendar
 
 This document records the design decisions behind the `calendar`
-("handyman-duty") application: why it is shaped the way it is, not just
-what it does. For build/run/CLI instructions see
-`cmd/handyman-duty/README.md`.
+application: why it is shaped the way it is, not just what it does.
+For build/run/CLI instructions see `cmd/calendar/README.md`.
 
 ## Origin and goal
 
@@ -17,7 +16,7 @@ one YAML configuration file (plus optional external files it can reference
 
 ## Package layout
 
-- `cmd/handyman-duty` — the CLI entry point and flag handling.
+- `cmd/calendar` — the CLI entry point and flag handling.
 - `internal/config` — the YAML schema, a mutex-guarded `Store` for safe
   concurrent load/save, and the external-file resolution logic described
   below.
@@ -165,7 +164,7 @@ back to normal HTTP Basic Auth otherwise. Bcrypt hashes are used for
 Basic Auth passwords. Since `requireAuth` reads only the first `user`
 value via `r.URL.Query().Get`, a proxy only needs to place its trusted
 value ahead of any client-supplied one, not strip the latter outright;
-see `cmd/handyman-duty/README.md` for worked Caddy and nginx examples.
+see `cmd/calendar/README.md` for worked Caddy and nginx examples.
 
 The config UI edits the duty roster, schedule window/season anchors,
 languages/translations, flag days per year (including the source and a
@@ -239,7 +238,7 @@ recognized image extension.
 `-config`, `-listen`, `-base-path`, `-dump-default-config`,
 `-dump-flag-days` (with `-year` to restrict to one year),
 `-dump-embedded-assets`/`-dump-effective-assets`, and
-`-trust-proxy-user-param`. See `cmd/handyman-duty/README.md` for details.
+`-trust-proxy-user-param`. See `cmd/calendar/README.md` for details.
 
 ## Docker image
 

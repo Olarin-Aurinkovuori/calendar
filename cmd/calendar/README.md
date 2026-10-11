@@ -26,10 +26,10 @@ among apartment pairs. It serves a small built-in HTTP server with:
 ## Building and running
 
 Run these from the repository root (this file lives under
-`cmd/handyman-duty/`, alongside `main.go` and the `Dockerfile`):
+`cmd/calendar/`, alongside `main.go` and the `Dockerfile`):
 
 ```sh
-go build -o calendar ./cmd/handyman-duty
+go build -o calendar ./cmd/calendar
 ./calendar -config config.yaml
 ```
 
@@ -108,8 +108,8 @@ matching what `-base-path /calendar` expects the application to see.)
 Start the server with `-trust-proxy-user-param=user`, keep it reachable
 only from the proxy (e.g. bind it to `127.0.0.1` or a container-internal
 network), and have the proxy do its own authentication in front of
-`/config`, then set `user=<name>` on the request so handyman-duty trusts
-it instead of checking Basic Auth itself. handyman-duty reads only the
+`/config`, then set `user=<name>` on the request so calendar trusts
+it instead of checking Basic Auth itself. calendar reads only the
 *first* `user` value in the query string, so as long as the trusted value
 is placed first (as in both examples below), a client-supplied `user`
 parameter tacked on afterwards is ignored either way.
@@ -138,12 +138,12 @@ server {
     server_name duty.example.com;
 
     location /config {
-        auth_basic "handyman-duty";
-        auth_basic_user_file /etc/nginx/htpasswd/handyman-duty;
+        auth_basic "calendar";
+        auth_basic_user_file /etc/nginx/htpasswd/calendar;
 
         # Put the authenticated username first; nginx appends any existing
         # query string (including a client-supplied "user") after it, and
-        # handyman-duty only looks at the first "user" value.
+        # calendar only looks at the first "user" value.
         rewrite ^/config(.*)$ /config$1?user=$remote_user break;
 
         proxy_pass http://127.0.0.1:8080;
@@ -158,7 +158,7 @@ server {
 ```
 
 Either way, `admin` must also exist as a configured user in `config.yaml`
-(the proxy only vouches for the *name*; handyman-duty still checks that
+(the proxy only vouches for the *name*; calendar still checks that
 the name is a known user, it just skips the password check).
 
 ## Running with Docker
@@ -175,7 +175,7 @@ Build with the repository root as context (the Dockerfile needs `go.mod`,
 `go.sum`, and `internal/`), run from the repository root:
 
 ```sh
-docker build -f cmd/handyman-duty/Dockerfile -t calendar .
+docker build -f cmd/calendar/Dockerfile -t calendar .
 
 mkdir -p data && chown 65532:65532 data   # match the image's nonroot user
 docker run -d --name calendar \
@@ -229,7 +229,7 @@ flag-day layout (one entry per year with a source URL template and a list
 of date/name/mandatory entries).
 
 For the reasoning behind these design choices, see
-[`docs/handyman-duty/README.md`](../../docs/handyman-duty/README.md).
+[`docs/calendar/README.md`](../../docs/calendar/README.md).
 
 ## Development
 
