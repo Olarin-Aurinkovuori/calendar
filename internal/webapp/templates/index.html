@@ -61,11 +61,15 @@
   </div>
 
   {{if .UpcomingSpecial}}
+  <h3 class="upcoming-special-heading">
+    {{call .T "upcoming_special_days_label"}}
+    <span class="muted small">({{call .T "special_day_days_ahead" (index .UpcomingSpecial 0).DaysAhead}})</span>
+  </h3>
   <div class="special-upcoming-row">
     {{range .UpcomingSpecial}}
     <div class="special-upcoming-entry">
       {{if .Icon}}{{if .IconIsImage}}<img class="special-icon-inline" src="{{url .Icon}}" alt="" style="--icon-scale: {{.IconScale}}">{{else}}<span class="special-icon-emoji" style="--icon-scale: {{.IconScale}}">{{.Icon}}</span>{{end}}{{end}}
-      <span>{{.Summary}} ({{.Date}})</span>
+      <span>{{.Summary}} ({{.Date}}, {{call $.T "special_day_days_ahead" .DaysAhead}})</span>
       <div class="special-upcoming-tooltip">
         {{if .Icon}}{{if .IconIsImage}}<img class="special-icon-tooltip" src="{{url .Icon}}" alt="" style="--icon-scale: {{.IconScale}}">{{else}}<span class="special-icon-tooltip-emoji" style="--icon-scale: {{.IconScale}}">{{.Icon}}</span>{{end}}{{end}}
         <span>{{.Summary}}</span>

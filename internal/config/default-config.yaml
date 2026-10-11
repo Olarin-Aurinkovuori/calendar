@@ -122,9 +122,11 @@ languages:
             schedule_season_summer_tooltip: "Summer: low probability for snow work"
             schedule_season_winter_tooltip: "Winter: gritting duty if weather conditions require it"
             schedule_show_more: Show more
+            special_day_days_ahead: "in %d day(s)"
             today_label: "Today's date: %s"
             today_season_summer_info: "Summer: low probability for snow work"
             today_season_winter_info: "Winter: gritting duty if weather conditions require it"
+            upcoming_special_days_label: Upcoming special days
             username_label: Username
             week_number_format: "%d"
     fi:
@@ -234,9 +236,11 @@ languages:
             schedule_season_summer_tooltip: "Kesä: lumityön todennäköisyys pieni"
             schedule_season_winter_tooltip: "Hiekoitusvuoro kelien niin vaatiessa."
             schedule_show_more: Näytä lisää
+            special_day_days_ahead: "%d päivän päästä"
             today_label: "Tänään on %s"
             today_season_summer_info: "Kesä: lumityön todennäköisyys pieni"
             today_season_winter_info: "Hiekoitusvuoro kelien niin vaatiessa ja myös lumityövuoro mikäli sitä ehtii kertyä liikaa."
+            upcoming_special_days_label: Tulevat erikoispäivät
             username_label: Käyttäjätunnus
             week_number_format: "%d."
 duty:

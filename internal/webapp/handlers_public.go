@@ -93,6 +93,7 @@ type UpcomingSpecialView struct {
 	Summary            string
 	Date               string // formatted per the page's date format, for display
 	DateISO            string // YYYY-MM-DD, for the calendar-download link
+	DaysAhead          int    // number of days between today and Date, for an "in N day(s)" hint
 	Icon               string
 	IconIsImage        bool
 	IconScale          float64
@@ -570,7 +571,8 @@ func activeSpecialDates(all []specialDateParsed, on time.Time, dateFormat string
 			if sd.Summary != "" {
 				upcoming = append(upcoming, UpcomingSpecialView{
 					Summary: sd.Summary, Date: sd.Date.Format(dateFormat), DateISO: sd.Date.Format("2006-01-02"),
-					Icon: sd.SummaryIcon, IconIsImage: iconIsImage(sd.SummaryIcon), IconScale: sd.SummaryIconScale,
+					DaysAhead: daysUntil,
+					Icon:      sd.SummaryIcon, IconIsImage: iconIsImage(sd.SummaryIcon), IconScale: sd.SummaryIconScale,
 					GoogleCalendarLink: googleCalendarLink(sd.Summary, "", sd.Date, sd.Date, 0),
 				})
 			}
