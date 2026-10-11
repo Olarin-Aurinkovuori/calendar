@@ -1,0 +1,35 @@
+{{define "layout"}}
+<!doctype html>
+<html lang="{{.Lang}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{call .T "app_title"}}</title>
+  <link rel="stylesheet" href="{{url "/static/style.css"}}">
+  <script>window.TALONMIESVUOROT_BASE_PATH = {{url ""}};</script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="{{url "/"}}">{{call .T "app_title"}}</a>
+      <nav>
+        <a href="{{url "/"}}">{{call .T "nav_home"}}</a>
+        <a href="{{url "/config"}}">{{call .T "nav_config"}}</a>
+      </nav>
+      <form class="lang-switch" method="get" action="{{url "/set-language"}}">
+        <input type="hidden" name="redirect" value="{{.Path}}">
+        <select name="lang" onchange="this.form.submit()">
+          {{range .Languages}}
+          <option value="{{.Code}}" {{if eq .Code $.Lang}}selected{{end}}>{{.Name}}</option>
+          {{end}}
+        </select>
+      </form>
+    </div>
+  </header>
+  <main class="container">
+    {{if .Flash}}<div class="flash">{{.Flash}}</div>{{end}}
+    {{template "content" .}}
+  </main>
+</body>
+</html>
+{{end}}

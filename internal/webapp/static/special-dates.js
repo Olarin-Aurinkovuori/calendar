@@ -1,0 +1,199 @@
+// special-dates.js drives the live preview in the configuration UI's
+// special-dates editor: as any field in a row is edited, the adjacent
+// ".specialdate-preview" block is re-rendered without a server round-trip.
+//
+// isImageIcon() duplicates the heuristic implemented in Go
+// (internal/webapp/domain.go's iconIsImage) for recognizing an icon value
+// as an image (vs. plain text/emoji): a remote URL, an already-local path,
+// or a recognized image file extension. Keep the two in sync.
+(function () {
+  "use strict";
+
+  var IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp"];
+
+  function isImageIcon(icon) {
+    if (!icon) return false;
+    var lower = icon.toLowerCase();
+    if (lower.indexOf("http://") === 0 || lower.indexOf("https://") === 0 || icon.indexOf("/") === 0) {
+      return true;
+    }
+    for (var i = 0; i < IMAGE_EXTENSIONS.length; i++) {
+      if (lower.endsWith(IMAGE_EXTENSIONS[i])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function field(row, role) {
+    var el = row.querySelector('[data-role="' + role + '"]');
+    return el ? el.value.trim() : "";
+  }
+
+  function renderIcon(target, icon, scale) {
+    target.innerHTML = "";
+    if (!icon) return;
+    if (isImageIcon(icon)) {
+      var img = document.createElement("img");
+      img.src = icon;
+      img.alt = "";
+      var size = (1.1 * (parseFloat(scale) || 1)) + "em";
+      img.style.width = size;
+      img.style.height = size;
+      target.appendChild(img);
+    } else {
+      var span = document.createElement("span");
+      span.textContent = icon;
+      if (scale) span.style.fontSize = (parseFloat(scale) || 1) + "em";
+      target.appendChild(span);
+    }
+  }
+
+  function renderTextAfterIcon(target, icon, scale, text) {
+    target.innerHTML = "";
+    renderIcon(target, icon, scale);
+    var span = document.createElement("span");
+    span.textContent = (icon ? " " : "") + text;
+    target.appendChild(span);
+  }
+
+  function renderFullDescription(target, icon, scale, title, summary, description) {
+    target.innerHTML = "";
+    renderIcon(target, icon, scale);
+    var parts = [title, summary, description].filter(function (t) { return t; });
+    var span = document.createElement("span");
+    span.textContent = (icon ? " " : "") + parts.join(" — ");
+    target.appendChild(span);
+  }
+
+  // renderLiveToday/renderLiveUpcoming reproduce the real markup/classes
+  // used in index.html's special-prominent / special-upcoming-row blocks,
+  // so the "test" buttons give an accurate preview of how the entry will
+  // look on the front page, instead of just a plain-text summary row.
+  function iconMarkup(icon, scale, imgClass, emojiClass) {
+    if (!icon) return "";
+    var scaleStyle = "--icon-scale: " + (parseFloat(scale) || 1) + ";";
+    if (isImageIcon(icon)) {
+      var src = icon.indexOf("/") === 0 ? (window.TALONMIESVUOROT_BASE_PATH || "") + icon : icon;
+      return '<img class="' + imgClass + '" src="' + src + '" alt="" style="' + scaleStyle + '">';
+    }
+    var span = document.createElement("span");
+    span.textContent = icon;
+    return '<span class="' + emojiClass + '" style="' + scaleStyle + '">' + span.innerHTML + "</span>";
+  }
+
+  function textNode(text) {
+    var span = document.createElement("span");
+    span.textContent = text;
+    return span.innerHTML;
+  }
+
+  function renderLiveToday(container, data) {
+    container.innerHTML =
+      '<div class="today-top"><div class="special-prominent">' +
+      iconMarkup(data.icon, data.scale, "special-icon-prominent", "special-icon-prominent-emoji") +
+      '<div class="special-prominent-text">' +
+      (data.title ? '<strong class="special-prominent-title">' + textNode(data.title) + "</strong>" : "") +
+      (data.summary ? '<p class="special-prominent-summary">' + textNode(data.summary) + "</p>" : "") +
+      (data.description ? '<p class="special-prominent-description">' + textNode(data.description) + "</p>" : "") +
+      "</div></div></div>";
+  }
+
+  function renderLiveUpcoming(container, data) {
+    var dateSuffix = data.date ? " (" + data.date + ")" : "";
+    container.innerHTML =
+      '<div class="special-upcoming-row"><div class="special-upcoming-entry">' +
+      iconMarkup(data.icon, data.scale, "special-icon-inline", "special-icon-emoji") +
+      "<span>" + textNode(data.summary + dateSuffix) + "</span>" +
+      '<div class="special-upcoming-tooltip">' +
+      iconMarkup(data.icon, data.scale, "special-icon-tooltip", "special-icon-tooltip-emoji") +
+      "<span>" + textNode(data.summary) + "</span>" +
+      '<a href="#" data-noop-link>' + textNode(container.dataset.addToCalendarLabel || "Add to calendar") + "</a>" +
+      "</div></div></div>";
+    var link = container.querySelector("[data-noop-link]");
+    if (link) link.addEventListener("click", function (e) { e.preventDefault(); });
+  }
+
+  function renderLivePreview(row) {
+    var preview = row.querySelector("[data-specialdate-preview]");
+    if (!preview) return;
+    var live = preview.querySelector("[data-preview-live]");
+    if (!live) return;
+    var mode = row.dataset.previewTestMode;
+    if (!mode) {
+      live.innerHTML = "";
+      return;
+    }
+    var data = {
+      icon: mode === "today" ? field(row, "description_icon") : field(row, "summary_icon"),
+      scale: mode === "today" ? field(row, "description_icon_scale") : field(row, "summary_icon_scale"),
+      title: field(row, "title"),
+      summary: field(row, "summary"),
+      description: field(row, "description"),
+      date: field(row, "date"),
+    };
+    if (mode === "today") {
+      renderLiveToday(live, data);
+    } else {
+      renderLiveUpcoming(live, data);
+    }
+  }
+
+  function updatePreview(row) {
+    var preview = row.querySelector("[data-specialdate-preview]");
+    if (!preview) return;
+
+    var date = field(row, "date");
+    var icon = field(row, "icon");
+    var title = field(row, "title");
+    var summary = field(row, "summary");
+    var summaryIcon = field(row, "summary_icon");
+    var summaryScale = field(row, "summary_icon_scale");
+    var description = field(row, "description");
+    var descriptionIcon = field(row, "description_icon");
+    var descriptionScale = field(row, "description_icon_scale");
+
+    var marker = preview.querySelector('[data-preview="marker"]');
+    if (marker) renderIcon(marker, icon, "1");
+
+    var list = preview.querySelector('[data-preview="list"]');
+    if (list) renderTextAfterIcon(list, icon, "1", title + (date ? " (" + date + ")" : ""));
+
+    var summaryEl = preview.querySelector('[data-preview="summary"]');
+    if (summaryEl) renderTextAfterIcon(summaryEl, summaryIcon, summaryScale, summary + (date ? " (" + date + ")" : ""));
+
+    var descriptionEl = preview.querySelector('[data-preview="description"]');
+    if (descriptionEl) renderFullDescription(descriptionEl, descriptionIcon, descriptionScale, title, summary, description);
+
+    renderLivePreview(row);
+  }
+
+  function init() {
+    var rows = document.querySelectorAll("[data-specialdate-row]");
+    rows.forEach(function (row) {
+      row.querySelectorAll('[data-preview-test]').forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var mode = btn.dataset.previewTest;
+          var alreadyActive = row.dataset.previewTestMode === mode;
+          row.dataset.previewTestMode = alreadyActive ? "" : mode;
+          row.querySelectorAll('[data-preview-test]').forEach(function (b) {
+            b.classList.toggle("active", !alreadyActive && b === btn);
+          });
+          renderLivePreview(row);
+        });
+      });
+      row.querySelectorAll("input").forEach(function (input) {
+        input.addEventListener("input", function () {
+          updatePreview(row);
+        });
+      });
+      updatePreview(row);
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();

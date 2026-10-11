@@ -1,0 +1,159 @@
+{{define "content"}}
+<section class="card today-card">
+  <h1>{{call .T "today_label" .Today}}</h1>
+
+  <div class="today-top">
+    <div class="today-summary">
+      <div class="duty-box">
+        {{if .CurrentGroup}}
+          <p class="duty-label"><strong>{{call .T "current_duty_label" .CurrentGroup.Label}}</strong> <span class="muted">({{.CurrentGroup.Apartments}})</span></p>
+          <p class="muted">{{call .T "duty_period_label" .PeriodRange}}</p>
+          {{if .TodaySeasonInfo}}
+            <p class="muted">{{.TodaySeasonInfo}}</p>
+          {{end}}
+        {{else}}
+          <p class="muted"><strong>{{call .T "current_duty_label" (call .T "no_duty_groups")}}</strong></p>
+        {{end}}
+      </div>
+
+      <div class="flag-box">
+        {{if .TodayFlag}}
+          <img class="flag-today" src="{{url "/static/img/finland-flag-waving.gif"}}" alt="" aria-hidden="true">
+          {{if .TodayFlag.Mandatory}}
+            <p class="badge badge-mandatory">{{call .T "flag_day_today_mandatory"}}</p>
+          {{else}}
+            <p class="badge badge-optional">{{call .T "flag_day_today_optional"}}</p>
+          {{end}}
+          <p>{{.TodayFlag.Name}}</p>
+        {{else}}
+          <p class="muted">{{call .T "flag_day_none_today"}}</p>
+        {{end}}
+
+        <h3>
+          {{call .T "next_flag_day_label"}}
+          {{if .NextFlag}}<span class="muted small">({{call .T "next_flag_weeks_ahead" .NextFlagWeeksAhead}})</span>{{end}}
+        </h3>
+        {{if .NextFlag}}
+          <p>
+            <strong>{{.NextFlag.Date}}</strong> &mdash; {{.NextFlag.Name}}
+            {{if .NextFlag.Mandatory}}
+              <span class="badge badge-mandatory small">{{call .T "flag_day_mandatory_badge"}}</span>
+            {{else}}
+              <span class="badge badge-optional small">{{call .T "flag_day_optional_badge"}}</span>
+            {{end}}
+          </p>
+        {{else}}
+          <p class="muted">{{call .T "no_upcoming_flag_days"}}</p>
+        {{end}}
+      </div>
+    </div>
+
+    {{range .SpecialDetail}}
+    <div class="special-prominent">
+      {{if .Icon}}{{if .IconIsImage}}<img class="special-icon-prominent" src="{{url .Icon}}" alt="" style="--icon-scale: {{.IconScale}}">{{else}}<span class="special-icon-prominent-emoji" style="--icon-scale: {{.IconScale}}">{{.Icon}}</span>{{end}}{{end}}
+      <div class="special-prominent-text">
+        {{if .Title}}<strong class="special-prominent-title">{{.Title}}</strong>{{end}}
+        {{if .Summary}}<p class="special-prominent-summary">{{.Summary}}</p>{{end}}
+        {{if .Description}}<p class="special-prominent-description">{{.Description}}</p>{{end}}
+      </div>
+    </div>
+    {{end}}
+  </div>
+
+  {{if .UpcomingSpecial}}
+  <div class="special-upcoming-row">
+    {{range .UpcomingSpecial}}
+    <div class="special-upcoming-entry">
+      {{if .Icon}}{{if .IconIsImage}}<img class="special-icon-inline" src="{{url .Icon}}" alt="" style="--icon-scale: {{.IconScale}}">{{else}}<span class="special-icon-emoji" style="--icon-scale: {{.IconScale}}">{{.Icon}}</span>{{end}}{{end}}
+      <span>{{.Summary}} ({{.Date}})</span>
+      <div class="special-upcoming-tooltip">
+        {{if .Icon}}{{if .IconIsImage}}<img class="special-icon-tooltip" src="{{url .Icon}}" alt="" style="--icon-scale: {{.IconScale}}">{{else}}<span class="special-icon-tooltip-emoji" style="--icon-scale: {{.IconScale}}">{{.Icon}}</span>{{end}}{{end}}
+        <span>{{.Summary}}</span>
+        <div class="calendar-links">
+          <a href="{{url "/calendar.ics"}}?special={{.DateISO}}">{{call $.T "add_to_calendar"}}</a>
+          {{if .GoogleCalendarLink}}<a href="{{.GoogleCalendarLink}}" target="_blank" rel="noopener">{{call $.T "add_to_google_calendar"}}</a>{{end}}
+        </div>
+      </div>
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+</section>
+
+<section class="card schedule-card">
+  <h2>{{call .T "schedule_heading"}}</h2>
+  {{if .WeekRows}}
+  <table class="schedule-table">
+    <thead>
+      <tr>
+        <th>{{call .T "schedule_col_week"}}</th>
+        <th>{{call .T "schedule_col_duty"}}</th>
+        <th>{{call .T "schedule_col_range"}}</th>
+        <th>{{call .T "schedule_col_flag"}}</th>
+        <th>{{call .T "schedule_col_flag_days"}}</th>
+      </tr>
+    </thead>
+    <tbody id="schedule-rows">
+      {{template "week_rows" .}}
+    </tbody>
+  </table>
+  <button type="button" id="schedule-show-more" data-next-from="{{.ScheduleNextFrom}}" data-step="{{.ShowMoreWeeks}}">{{call .T "schedule_show_more"}}</button>
+  {{else}}
+  <p class="muted">{{call .T "no_duty_groups"}}</p>
+  {{end}}
+</section>
+
+<section class="card references">
+  <h2>{{call .T "references_heading"}}</h2>
+  <ul>
+    {{range .FlagSources}}
+    <li>
+      {{call $.T "references_flagdays_source"}} {{.Year}}:
+      {{if .SourceURL}}<a href="{{.SourceURL}}" rel="noopener">{{.SourceURL}}</a>{{else}}<span class="muted">{{call $.T "references_unknown"}}</span>{{end}}
+      {{if .ExternalFile}}<span class="muted">({{call $.T "references_external_file" .ExternalFile}})</span>{{end}}
+    </li>
+    {{end}}
+    {{range .AssetOrigins}}
+    <li>
+      {{.Name}}:
+      {{if .External}}{{call $.T "references_external"}} ({{.Dir}}){{else}}{{call $.T "references_builtin"}}{{end}}
+    </li>
+    {{end}}
+  </ul>
+</section>
+<script src="{{url "/static/schedule.js"}}" defer></script>
+{{end}}
+
+{{define "week_rows"}}
+{{range .WeekRows}}
+<tr class="{{if .Summer}}season-summer{{else}}season-winter{{end}}{{if .IsCurrent}} current-week{{end}}">
+  <td class="season-tooltip-cell">
+    {{.WeekLabel}}
+    <div class="season-tooltip">
+      <p>{{.SeasonTooltip}}</p>
+      <div class="calendar-links">
+        <a href="{{url "/calendar.ics"}}?group={{.GroupID}}&amp;months={{$.YearEndMonthsAhead}}">{{call $.T "add_to_calendar"}}</a>
+        {{if .GoogleCalendarLink}}<a href="{{.GoogleCalendarLink}}" target="_blank" rel="noopener">{{call $.T "add_to_google_calendar"}}</a>{{end}}
+      </div>
+    </div>
+  </td>
+  <td>{{.GroupLabel}}</td>
+  <td>{{.RangeLabel}}</td>
+  <td class="flag-marker-cell">
+    {{if .HasFlag}}
+    <span class="flag-marker">{{range .MarkerIcons}}{{if .IsImage}}<img class="marker-icon-img" src="{{url .Icon}}" alt="">{{else}}{{.Icon}}{{end}}{{end}}</span>
+    <div class="flag-tooltip">
+      <p>{{call $.T "schedule_has_flag_day"}}</p>
+      {{if and .IsCurrent $.TodayFlag}}
+        <img class="flag-today-small" src="{{url "/static/img/finland-flag-waving.gif"}}" alt="" aria-hidden="true">
+        <p>{{if $.TodayFlag.Mandatory}}{{call $.T "flag_day_today_mandatory"}}{{else}}{{call $.T "flag_day_today_optional"}}{{end}}</p>
+      {{end}}
+    </div>
+    {{end}}
+  </td>
+  <td>
+    {{range $i, $fd := .FlagDays}}<span class="week-flagday">{{if $fd.Special}}{{if $fd.IconIsImage}}<img class="special-icon-inline" src="{{url $fd.Icon}}" alt="">{{else if $fd.Icon}}{{$fd.Icon}} {{end}}{{$fd.Name}} ({{$fd.Date}}){{else}}{{$fd.Name}} ({{$fd.Date}}) {{if $fd.Mandatory}}<span class="badge badge-mandatory small">{{call $.T "flag_day_mandatory_badge"}}</span>{{else}}<span class="badge badge-optional small">{{call $.T "flag_day_optional_badge"}}</span>{{end}}{{end}}</span>{{end}}
+  </td>
+</tr>
+{{end}}
+{{end}}

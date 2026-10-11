@@ -1,0 +1,452 @@
+# Default configuration for calendar, used to create config.yaml the
+# first time the application runs (if no configuration file exists yet).
+#
+# IMPORTANT: change the default admin password before exposing this server
+# publicly. The default is username "admin", password "change-me".
+#
+# Flag day ("liputuspäivä") sources:
+#   2026: https://intermin.fi/liputuspaivat-2026 (verbatim, Ministry of the Interior)
+#   2027: fixed-date entries copied from 2026; moveable observances
+#         (Äitienpäivä, Kaatuneitten muistopäivä, Juhannus, Isänpäivä)
+#         recalculated for 2027, since no official 2027 list was published
+#         yet when this file was written.
+server:
+    listen_addr: :8080
+    base_path: ""
+default_language: fi
+languages:
+    en:
+        name: English
+        strings:
+            add_to_calendar: Add to calendar
+            add_to_google_calendar: Add to Google Calendar
+            app_title: Caretaker Duty Schedule
+            calendar_event_title_prefix: 'Aurinkovuori Caretaker Duty: '
+            config_add_group: Add group
+            config_duty_groups: Apartment pairs
+            config_duty_heading: Duty roster
+            config_duty_period_days: Period length (days)
+            config_duty_start_date: First period start date
+            config_flagday_recommended: Recommended Flag Day
+            config_flagdays_add_year: Add year
+            config_flagdays_date: Date
+            config_flagdays_heading: Flag days
+            config_flagdays_mandatory: Official Flag Day
+            config_flagdays_name: Name
+            config_flagdays_refetch: Re-fetch
+            config_flagdays_source: Source
+            config_flagdays_source_template: Source URL template (include {year})
+            config_flagdays_year: "Year: %s"
+            config_flagdays_year_file_template_hint: Store each year's flag day data in its own external YAML file instead of this one, named by substituting {year} into the template (path is relative to the configuration file if not absolute). Leave blank to keep years inline above.
+            config_flagdays_year_file_template_label: External per-year file template
+            config_flagdays_year_file_template_placeholder: e.g. flagdays-{year}.yaml
+            config_group_apartments: Apartments (comma separated)
+            config_group_id: ID
+            config_group_label: Label
+            config_language_add: Add language
+            config_languages_heading: Languages and translations
+            config_remove: Remove
+            config_row_hint: Clear a row to remove it. Fill in the last blank row to add a new one.
+            config_save: Save
+            config_saved: Settings saved
+            config_schedule_heading: Schedule view
+            config_schedule_months_after: Months ahead to show
+            config_schedule_months_before: Months back to show
+            config_schedule_summer_end: Summer end anchor (MM-DD)
+            config_schedule_summer_start: Summer start anchor (MM-DD)
+            config_specialdate_date: Date
+            config_specialdate_delete: Delete
+            config_specialdate_description: "Description (shown with Title and Summary once close to/on the date)"
+            config_specialdate_description_icon: Description icon
+            config_specialdate_icon: Icon (emoji or image URL/path)
+            config_specialdate_icon_placeholder: e.g. 🎉 or https://example.com/icon.png
+            config_specialdate_icon_scale: Icon scale
+            config_specialdate_lead_days: Show this many days before
+            config_specialdate_preview_description: "Full description (close/on the date):"
+            config_specialdate_preview_heading: Preview
+            config_specialdate_preview_list: "Flag day list entry:"
+            config_specialdate_preview_marker: "Flag marker:"
+            config_specialdate_preview_summary: "Today's summary (upcoming):"
+            config_specialdate_preview_test_today: "Test: show as today"
+            config_specialdate_preview_test_upcoming: "Test: show as upcoming"
+            config_specialdate_summary: "Summary (shown while upcoming)"
+            config_specialdate_summary_icon: Summary icon
+            config_specialdate_title: Title (flag day list)
+            config_specialdates_cleanup: Remove past special dates
+            config_specialdates_heading: Special dates
+            config_specialdates_hint: Custom flagged dates shown alongside official flag days in the schedule table, plus their own entries in today's summary as they approach and arrive.
+            config_title: Settings
+            config_user_add: Add user
+            config_user_delete: Delete
+            config_user_password: New password (leave blank to keep)
+            config_user_username: Username
+            config_users_file_hint: Store administrator accounts in an external YAML file instead of this one (path is relative to the configuration file if not absolute). Leave blank to keep them inline above.
+            config_users_file_label: External users file
+            config_users_file_placeholder: e.g. users.yaml
+            config_users_heading: Administrators
+            current_duty_label: "On duty: %s"
+            date_format: Jan 2, 2006
+            duty_period_label: "Duty period: %s"
+            duty_period_range: '%s – %s'
+            error_generic: Something went wrong
+            flag_day_mandatory_badge: Official Flag Day
+            flag_day_none_today: Today is not a flag day
+            flag_day_optional_badge: Recommended Flag Day
+            flag_day_today_mandatory: Today is an official flag day
+            flag_day_today_optional: Today is a recommended flag day
+            login_button: Log in
+            login_error: Invalid username or password
+            login_title: Log in
+            nav_config: Settings
+            nav_home: Home
+            nav_login: Log in
+            nav_logout: Log out
+            next_flag_day_label: Next flag day
+            next_flag_weeks_ahead: "in %d week(s)"
+            no_duty_groups: No duty groups configured yet.
+            no_upcoming_flag_days: No upcoming flag days known
+            password_label: Password
+            references_builtin: Built-in
+            references_external: External override
+            references_external_file: "external file: %s"
+            references_flagdays_source: Flag days
+            references_heading: References
+            references_unknown: unknown
+            schedule_col_duty: Duty pair
+            schedule_col_flag: Flag
+            schedule_col_flag_days: Flag days
+            schedule_col_range: Date range
+            schedule_col_week: Week
+            schedule_has_flag_day: This week includes a flag day
+            schedule_heading: Upcoming duty schedule
+            schedule_season_summer_tooltip: "Summer: low probability for snow work"
+            schedule_season_winter_tooltip: "Winter: gritting duty if weather conditions require it"
+            schedule_show_more: Show more
+            today_label: "Today's date: %s"
+            today_season_summer_info: "Summer: low probability for snow work"
+            today_season_winter_info: "Winter: gritting duty if weather conditions require it"
+            username_label: Username
+            week_number_format: "%d"
+    fi:
+        name: Suomi
+        strings:
+            add_to_calendar: Lataa kalenterimerkinnät iCal-muodossa
+            add_to_google_calendar: Lisää Google-kalenteriin
+            app_title: Talonmiesvuorot
+            calendar_event_title_prefix: 'Aurinkovuori talonmiesvuoro: '
+            config_add_group: Lisää vuoro
+            config_duty_groups: Asuntoparit
+            config_duty_heading: Vuorolista
+            config_duty_period_days: Vuoron pituus (päivää)
+            config_duty_start_date: Ensimmäisen vuoron alkupäivä
+            config_flagday_recommended: Suositeltu liputuspäivä
+            config_flagdays_add_year: Lisää vuosi
+            config_flagdays_date: Päivämäärä
+            config_flagdays_heading: Liputuspäivät
+            config_flagdays_mandatory: Virallinen liputuspäivä
+            config_flagdays_name: Nimi
+            config_flagdays_refetch: Hae uudelleen
+            config_flagdays_source: Lähde
+            config_flagdays_source_template: Lähde-URL-malli (sis. {year})
+            config_flagdays_year: "Vuosi: %s"
+            config_flagdays_year_file_template_hint: Tallenna kunkin vuoden liputuspäivätiedot omaan erilliseen YAML-tiedostoonsa tämän sijaan, nimettynä korvaamalla {year} mallissa (polku on suhteellinen asetustiedoston sijaintiin, jollei se ole absoluuttinen). Jätä tyhjäksi käyttääksesi yllä olevaa listaa.
+            config_flagdays_year_file_template_label: Ulkoinen vuosikohtainen tiedostomalli
+            config_flagdays_year_file_template_placeholder: esim. liputuspaivat-{year}.yaml
+            config_group_apartments: Asunnot (pilkulla eroteltuna)
+            config_group_id: Tunniste
+            config_group_label: Nimi
+            config_language_add: Lisää kieli
+            config_languages_heading: Kielet ja käännökset
+            config_remove: Poista
+            config_row_hint: Tyhjennä rivi poistaaksesi sen. Täytä alimmainen tyhjä rivi lisätäksesi uuden.
+            config_save: Tallenna
+            config_saved: Asetukset tallennettu
+            config_schedule_heading: Aikataulunäkymä
+            config_schedule_months_after: Kuukausia eteenpäin näytettäväksi
+            config_schedule_months_before: Kuukausia taaksepäin näytettäväksi
+            config_schedule_summer_end: Kesän loppu (KK-PP)
+            config_schedule_summer_start: Kesän alku (KK-PP)
+            config_specialdate_date: Päivämäärä
+            config_specialdate_delete: Poista
+            config_specialdate_description: "Kuvaus (näytetään yhdessä otsikon ja yhteenvedon kanssa lähellä päivämäärää / sinä päivänä)"
+            config_specialdate_description_icon: Kuvauksen kuvake
+            config_specialdate_icon: Kuvake (emoji tai kuvan URL/polku)
+            config_specialdate_icon_placeholder: esim. 🎉 tai https://esimerkki.fi/kuvake.png
+            config_specialdate_icon_scale: Kuvakkeen skaalaus
+            config_specialdate_lead_days: Näytä näin monta päivää etukäteen
+            config_specialdate_preview_description: "Täysi kuvaus (lähellä/sinä päivänä):"
+            config_specialdate_preview_heading: Esikatselu
+            config_specialdate_preview_list: "Liputuspäivälistan merkintä:"
+            config_specialdate_preview_marker: "Lippumerkki:"
+            config_specialdate_preview_summary: "Tämän päivän yhteenveto (tuleva):"
+            config_specialdate_preview_test_today: "Testaa: näytä tämän päivän tilana"
+            config_specialdate_preview_test_upcoming: "Testaa: näytä tulevana"
+            config_specialdate_summary: "Yhteenveto (näytetään kun lähestyy)"
+            config_specialdate_summary_icon: Yhteenvedon kuvake
+            config_specialdate_title: Otsikko (liputuspäivälista)
+            config_specialdates_cleanup: Poista menneet erikoispäivät
+            config_specialdates_heading: Erikoispäivät
+            config_specialdates_hint: Mukautetut liputetut päivämäärät, jotka näytetään aikataulussa virallisten liputuspäivien ohella sekä omina merkintöinään tämän päivän yhteenvedossa niiden lähestyessä ja koittaessa.
+            config_title: Asetukset
+            config_user_add: Lisää käyttäjä
+            config_user_delete: Poista
+            config_user_password: Uusi salasana (jätä tyhjäksi jos ei muuteta)
+            config_user_username: Käyttäjätunnus
+            config_users_file_hint: Tallenna pääkäyttäjätilit erilliseen YAML-tiedostoon tämän sijaan (polku on suhteellinen asetustiedoston sijaintiin, jollei se ole absoluuttinen). Jätä tyhjäksi käyttääksesi yllä olevaa listaa.
+            config_users_file_label: Ulkoinen käyttäjätiedosto
+            config_users_file_placeholder: esim. users.yaml
+            config_users_heading: Pääkäyttäjät
+            current_duty_label: "Vuorossa: %s"
+            date_format: 2.1.2006
+            duty_period_label: "Vuoro: %s"
+            duty_period_range: '%s – %s'
+            error_generic: Jokin meni pieleen
+            flag_day_mandatory_badge: Virallinen liputuspäivä
+            flag_day_none_today: Tänään ei ole liputuspäivää
+            flag_day_optional_badge: Suositeltu liputuspäivä
+            flag_day_today_mandatory: Tänään on virallinen liputuspäivä
+            flag_day_today_optional: Tänään on suositeltu liputuspäivä
+            login_button: Kirjaudu
+            login_error: Väärä käyttäjätunnus tai salasana
+            login_title: Kirjaudu sisään
+            nav_config: Asetukset
+            nav_home: Etusivu
+            nav_login: Kirjaudu
+            nav_logout: Kirjaudu ulos
+            next_flag_day_label: Seuraava liputuspäivä
+            next_flag_weeks_ahead: "%d viikon päästä"
+            no_duty_groups: Vuoroja ei ole vielä määritetty.
+            no_upcoming_flag_days: Ei tiedossa olevia tulevia liputuspäiviä
+            password_label: Salasana
+            references_builtin: Sisäänrakennettu
+            references_external: Ulkoinen korvaus
+            references_external_file: "ulkoinen tiedosto: %s"
+            references_flagdays_source: Liputuspäivät
+            references_heading: Lähdeviitteet
+            references_unknown: ei tiedossa
+            schedule_col_duty: Vuorossa
+            schedule_col_flag: Liputus
+            schedule_col_flag_days: Liputuspäivät
+            schedule_col_range: Ajanjakso
+            schedule_col_week: Viikko
+            schedule_has_flag_day: Tällä viikolla on liputuspäivä
+            schedule_heading: Tulevat vuorot
+            schedule_season_summer_tooltip: "Kesä: lumityön todennäköisyys pieni"
+            schedule_season_winter_tooltip: "Hiekoitusvuoro kelien niin vaatiessa."
+            schedule_show_more: Näytä lisää
+            today_label: "Tänään on %s"
+            today_season_summer_info: "Kesä: lumityön todennäköisyys pieni"
+            today_season_winter_info: "Hiekoitusvuoro kelien niin vaatiessa ja myös lumityövuoro mikäli sitä ehtii kertyä liikaa."
+            username_label: Käyttäjätunnus
+            week_number_format: "%d."
+duty:
+    period_days: 7
+    start_date: "2026-01-05"
+    groups:
+        - id: a-j
+          label: A / J
+          apartments:
+            - A
+            - J
+        - id: b-c
+          label: B / C
+          apartments:
+            - B
+            - C
+        - id: d-f
+          label: D / F
+          apartments:
+            - D
+            - F
+        - id: e-g
+          label: E / G
+          apartments:
+            - E
+            - G
+        - id: h-i
+          label: H / I
+          apartments:
+            - H
+            - I
+schedule:
+    months_before: 1
+    months_after: 3
+    summer_start_anchor: "05-01"
+    summer_end_anchor: "09-30"
+    show_more_weeks: 12
+flagging_days:
+    source_url_template: https://intermin.fi/liputuspaivat-{year}
+    years:
+        "2026":
+            source: https://intermin.fi/liputuspaivat-2026
+            days:
+                - date: "2026-02-03"
+                  name: Alvar ja Aino Aallon sekä suomalaisen arkkitehtuurin ja muotoilun päivä
+                  mandatory: false
+                - date: "2026-02-05"
+                  name: J.L. Runebergin päivä
+                  mandatory: true
+                - date: "2026-02-06"
+                  name: Saamelaisten kansallispäivä
+                  mandatory: false
+                - date: "2026-02-28"
+                  name: Kalevalan päivä, suomalaisen kulttuurin päivä
+                  mandatory: true
+                - date: "2026-03-19"
+                  name: Minna Canthin päivä, tasa-arvon päivä
+                  mandatory: true
+                - date: "2026-04-08"
+                  name: Romanien kansallispäivä
+                  mandatory: false
+                - date: "2026-04-09"
+                  name: Mikael Agricolan päivä, suomen kielen päivä
+                  mandatory: true
+                - date: "2026-04-20"
+                  name: Evakkojen päivä
+                  mandatory: false
+                - date: "2026-04-27"
+                  name: Kansallinen veteraanipäivä
+                  mandatory: true
+                - date: "2026-05-01"
+                  name: Vappu, suomalaisen työn päivä
+                  mandatory: true
+                - date: "2026-05-09"
+                  name: Eurooppa-päivä
+                  mandatory: true
+                - date: "2026-05-10"
+                  name: Äitienpäivä
+                  mandatory: true
+                - date: "2026-05-12"
+                  name: J.V. Snellmanin päivä, suomalaisuuden päivä
+                  mandatory: true
+                - date: "2026-05-17"
+                  name: Kaatuneitten muistopäivä
+                  mandatory: true
+                - date: "2026-06-04"
+                  name: Puolustusvoimain lippujuhlan päivä
+                  mandatory: true
+                - date: "2026-06-20"
+                  name: Juhannus, Suomen lipun päivä
+                  mandatory: true
+                - date: "2026-07-06"
+                  name: Eino Leinon päivä, runon ja suven päivä
+                  mandatory: true
+                - date: "2026-08-09"
+                  name: Tove Janssonin ja suomalaisen taiteen päivä
+                  mandatory: false
+                - date: "2026-08-29"
+                  name: Suomen luonnon päivä
+                  mandatory: true
+                - date: "2026-10-01"
+                  name: Miina Sillanpään ja kansalaisvaikuttamisen päivä
+                  mandatory: true
+                - date: "2026-10-10"
+                  name: Aleksis Kiven päivä, suomalaisen kirjallisuuden päivä
+                  mandatory: true
+                - date: "2026-10-24"
+                  name: YK:n päivä
+                  mandatory: true
+                - date: "2026-11-06"
+                  name: Ruotsalaisuuden päivä, Kustaa Aadolfin päivä
+                  mandatory: true
+                - date: "2026-11-08"
+                  name: Isänpäivä
+                  mandatory: true
+                - date: "2026-11-20"
+                  name: Lapsen oikeuksien päivä
+                  mandatory: true
+                - date: "2026-12-06"
+                  name: Itsenäisyyspäivä
+                  mandatory: true
+                - date: "2026-12-08"
+                  name: Jean Sibeliuksen päivä, suomalaisen musiikin päivä
+                  mandatory: true
+        "2027":
+            source: https://almanakka.helsinki.fi/fi/liputus-ja-juhlapaivat/liputuspaivat-2027
+            days:
+                - date: "2027-02-03"
+                  name: Alvar ja Aino Aallon sekä suomalaisen arkkitehtuurin ja muotoilun päivä
+                  mandatory: false
+                - date: "2027-02-05"
+                  name: J.L. Runebergin päivä
+                  mandatory: true
+                - date: "2027-02-06"
+                  name: Saamelaisten kansallispäivä
+                  mandatory: false
+                - date: "2027-02-28"
+                  name: Kalevalan päivä, suomalaisen kulttuurin päivä
+                  mandatory: true
+                - date: "2027-03-19"
+                  name: Minna Canthin päivä, tasa-arvon päivä
+                  mandatory: true
+                - date: "2027-04-08"
+                  name: Romanien kansallispäivä
+                  mandatory: false
+                - date: "2027-04-09"
+                  name: Mikael Agricolan päivä, suomen kielen päivä
+                  mandatory: true
+                - date: "2027-04-20"
+                  name: Evakkojen päivä
+                  mandatory: false
+                - date: "2027-04-27"
+                  name: Kansallinen veteraanipäivä
+                  mandatory: true
+                - date: "2027-05-01"
+                  name: Vappu, suomalaisen työn päivä
+                  mandatory: true
+                - date: "2027-05-09"
+                  name: Eurooppa-päivä
+                  mandatory: true
+                - date: "2027-05-09"
+                  name: Äitienpäivä
+                  mandatory: true
+                - date: "2027-05-12"
+                  name: J.V. Snellmanin päivä, suomalaisuuden päivä
+                  mandatory: true
+                - date: "2027-05-16"
+                  name: Kaatuneitten muistopäivä
+                  mandatory: true
+                - date: "2027-06-04"
+                  name: Puolustusvoimain lippujuhlan päivä
+                  mandatory: true
+                - date: "2027-06-26"
+                  name: Juhannus, Suomen lipun päivä
+                  mandatory: true
+                - date: "2027-07-06"
+                  name: Eino Leinon päivä, runon ja suven päivä
+                  mandatory: true
+                - date: "2027-08-09"
+                  name: Tove Janssonin ja suomalaisen taiteen päivä
+                  mandatory: false
+                - date: "2027-08-29"
+                  name: Suomen luonnon päivä
+                  mandatory: true
+                - date: "2027-10-01"
+                  name: Miina Sillanpään ja kansalaisvaikuttamisen päivä
+                  mandatory: true
+                - date: "2027-10-10"
+                  name: Aleksis Kiven päivä, suomalaisen kirjallisuuden päivä
+                  mandatory: true
+                - date: "2027-10-24"
+                  name: YK:n päivä
+                  mandatory: true
+                - date: "2027-11-06"
+                  name: Ruotsalaisuuden päivä, Kustaa Aadolfin päivä
+                  mandatory: true
+                - date: "2027-11-14"
+                  name: Isänpäivä
+                  mandatory: true
+                - date: "2027-11-20"
+                  name: Lapsen oikeuksien päivä
+                  mandatory: true
+                - date: "2027-12-06"
+                  name: Itsenäisyyspäivä
+                  mandatory: true
+                - date: "2027-12-08"
+                  name: Jean Sibeliuksen päivä, suomalaisen musiikin päivä
+                  mandatory: true
+special_dates: []
+auth:
+    users:
+        - username: admin
+          password_hash: $2a$10$VOWJplQQbGrzL3ARWOq3l.THpJ8QlFBLIF07LM4nV.5.vMIV1T.Ya

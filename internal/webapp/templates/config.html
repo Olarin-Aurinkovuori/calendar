@@ -1,0 +1,240 @@
+{{define "content"}}
+<h1>{{call .T "config_title"}}</h1>
+
+<section class="card">
+  <h2>{{call .T "config_duty_heading"}}</h2>
+  <form method="post" action="{{url "/config/duty"}}">
+    <label>
+      {{call .T "config_duty_period_days"}}
+      <input type="number" name="period_days" min="1" value="{{.PeriodDays}}">
+    </label>
+    <label>
+      {{call .T "config_duty_start_date"}}
+      <input type="date" name="start_date" value="{{.StartDate}}">
+    </label>
+    <h3>{{call .T "config_duty_groups"}}</h3>
+    <p class="muted">{{call .T "config_row_hint"}}</p>
+    <table class="editable">
+      <thead><tr><th>{{call .T "config_group_id"}}</th><th>{{call .T "config_group_label"}}</th><th>{{call .T "config_group_apartments"}}</th></tr></thead>
+      <tbody>
+        {{range $i, $g := .GroupRows}}
+        <tr>
+          <td><input type="text" name="group_id_{{$i}}" value="{{$g.ID}}"></td>
+          <td><input type="text" name="group_label_{{$i}}" value="{{$g.Label}}"></td>
+          <td><input type="text" name="group_apartments_{{$i}}" value="{{$g.Apartments}}"></td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+    <input type="hidden" name="row_count" value="{{len .GroupRows}}">
+    <button type="submit">{{call .T "config_save"}}</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>{{call .T "config_schedule_heading"}}</h2>
+  <form method="post" action="{{url "/config/schedule"}}">
+    <label>
+      {{call .T "config_schedule_months_before"}}
+      <input type="number" name="months_before" min="1" value="{{.MonthsBefore}}">
+    </label>
+    <label>
+      {{call .T "config_schedule_months_after"}}
+      <input type="number" name="months_after" min="1" value="{{.MonthsAfter}}">
+    </label>
+    <label>
+      {{call .T "config_schedule_summer_start"}}
+      <input type="text" name="summer_start_anchor" value="{{.SummerStartAnchor}}" placeholder="MM-DD" size="5">
+    </label>
+    <label>
+      {{call .T "config_schedule_summer_end"}}
+      <input type="text" name="summer_end_anchor" value="{{.SummerEndAnchor}}" placeholder="MM-DD" size="5">
+    </label>
+    <button type="submit">{{call .T "config_save"}}</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>{{call .T "config_flagdays_heading"}}</h2>
+  <form method="post" action="{{url "/config/flagdays/template"}}">
+    <label>
+      {{call .T "config_flagdays_source_template"}}
+      <input type="text" name="source_url_template" value="{{.SourceURLTemplate}}" size="50">
+    </label>
+    <button type="submit">{{call .T "config_save"}}</button>
+  </form>
+
+  <form method="post" action="{{url "/config/flagdays/year-file-template"}}" class="inline-form">
+    <label>{{call .T "config_flagdays_year_file_template_label"}} <input type="text" name="year_file_template" value="{{.YearFileTemplate}}" placeholder="{{call .T "config_flagdays_year_file_template_placeholder"}}" size="30"></label>
+    <button type="submit">{{call .T "config_save"}}</button>
+  </form>
+  <p class="muted">{{call .T "config_flagdays_year_file_template_hint"}}</p>
+
+  <form method="post" action="{{url "/config/flagdays/add-year"}}" class="inline-form">
+    <label>
+      {{call .T "config_flagdays_add_year"}}
+      <input type="number" name="year" min="1900" max="2999">
+    </label>
+    <button type="submit">{{call .T "config_flagdays_add_year"}}</button>
+  </form>
+
+  {{range $y := .FlagYears}}
+  <div class="flagyear">
+    <h3>{{call $.T "config_flagdays_year" $y.Year}}</h3>
+    <p class="muted">{{call $.T "config_row_hint"}}</p>
+    <form method="post" action="{{url "/config/flagdays"}}/{{$y.Year}}">
+      <label>{{call $.T "config_flagdays_source"}} <input type="text" name="source" value="{{$y.Source}}" size="50"></label>
+      <table class="editable">
+        <thead><tr><th>{{call $.T "config_flagdays_date"}}</th><th>{{call $.T "config_flagdays_name"}}</th><th>{{call $.T "config_flagdays_mandatory"}}</th></tr></thead>
+        <tbody>
+          {{range $i, $d := $y.Rows}}
+          <tr>
+            <td><input type="date" name="date_{{$i}}" value="{{$d.Date}}"></td>
+            <td><input type="text" name="name_{{$i}}" value="{{$d.Name}}" size="40"></td>
+            <td>
+              <input type="checkbox" name="mandatory_{{$i}}" data-flagday-mandatory {{if $d.Mandatory}}checked{{end}}>
+              <span class="muted" data-flagday-recommended {{if $d.Mandatory}}hidden{{end}}>({{call $.T "config_flagday_recommended"}})</span>
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+      <input type="hidden" name="row_count" value="{{len $y.Rows}}">
+      <button type="submit">{{call $.T "config_save"}}</button>
+    </form>
+    <form method="post" action="{{url "/config/flagdays"}}/{{$y.Year}}/refetch" class="inline-form">
+      <button type="submit">{{call $.T "config_flagdays_refetch"}}</button>
+    </form>
+  </div>
+  {{end}}
+</section>
+
+<section class="card">
+  <h2>{{call .T "config_languages_heading"}}</h2>
+  {{range .LanguageBlocks}}
+  <div class="langblock">
+    <form method="post" action="{{url "/config/languages"}}/{{.Code}}">
+      <h3>{{.Code}}</h3>
+      <label>{{call $.T "config_group_label"}} <input type="text" name="name" value="{{.Name}}"></label>
+      <textarea name="strings" rows="12" cols="60">{{.StringsText}}</textarea>
+      <button type="submit">{{call $.T "config_save"}}</button>
+    </form>
+  </div>
+  {{end}}
+  <form method="post" action="{{url "/config/languages/add"}}" class="inline-form">
+    <label>Code <input type="text" name="code" maxlength="8" size="4"></label>
+    <label>{{call .T "config_group_label"}} <input type="text" name="name"></label>
+    <button type="submit">{{call .T "config_language_add"}}</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>{{call .T "config_users_heading"}}</h2>
+  {{range .Users}}
+  <form method="post" action="{{url "/config/users"}}/{{.}}" class="inline-form">
+    <span class="username">{{.}}</span>
+    <input type="password" name="password" placeholder="{{call $.T "config_user_password"}}">
+    <button type="submit" name="action" value="save">{{call $.T "config_save"}}</button>
+    <button type="submit" name="action" value="delete">{{call $.T "config_user_delete"}}</button>
+  </form>
+  {{end}}
+  <form method="post" action="{{url "/config/users/add"}}" class="inline-form">
+    <label>{{call .T "config_user_username"}} <input type="text" name="username"></label>
+    <label>{{call .T "config_user_password"}} <input type="password" name="password"></label>
+    <button type="submit">{{call .T "config_user_add"}}</button>
+  </form>
+  <form method="post" action="{{url "/config/users-file"}}" class="inline-form">
+    <label>{{call .T "config_users_file_label"}} <input type="text" name="users_file" value="{{.UsersFile}}" placeholder="{{call .T "config_users_file_placeholder"}}"></label>
+    <button type="submit">{{call .T "config_save"}}</button>
+  </form>
+  <p class="muted">{{call .T "config_users_file_hint"}}</p>
+</section>
+
+<section class="card">
+  <h2>{{call .T "config_specialdates_heading"}}</h2>
+  <p class="muted">{{call .T "config_specialdates_hint"}}</p>
+  <p class="muted">{{call .T "config_row_hint"}}</p>
+  <form method="post" action="{{url "/config/special-dates"}}">
+    {{range $i, $d := .SpecialDateRows}}
+    <div class="specialdate-entry" data-specialdate-row>
+      <div class="specialdate-fields">
+        <label>{{call $.T "config_specialdate_date"}}
+          <input type="date" name="special_date_{{$i}}" value="{{$d.Date}}" data-role="date">
+        </label>
+        <label>{{call $.T "config_specialdate_icon"}}
+          <input type="text" name="special_icon_{{$i}}" value="{{$d.Icon}}" placeholder="{{call $.T "config_specialdate_icon_placeholder"}}" size="24" data-role="icon">
+        </label>
+        <label class="wide">{{call $.T "config_specialdate_title"}}
+          <input type="text" name="special_title_{{$i}}" value="{{$d.Title}}" size="50" data-role="title">
+        </label>
+        <label class="wide">{{call $.T "config_specialdate_summary"}}
+          <input type="text" name="special_summary_{{$i}}" value="{{$d.Summary}}" size="50" data-role="summary">
+        </label>
+        <label>{{call $.T "config_specialdate_summary_icon"}}
+          <input type="text" name="special_summary_icon_{{$i}}" value="{{$d.SummaryIcon}}" placeholder="{{call $.T "config_specialdate_icon_placeholder"}}" size="24" data-role="summary_icon">
+        </label>
+        <label>{{call $.T "config_specialdate_icon_scale"}}
+          <input type="number" name="special_summary_icon_scale_{{$i}}" value="{{$d.SummaryIconScale}}" min="0.1" step="0.1" size="4" data-role="summary_icon_scale">
+        </label>
+        <label>{{call $.T "config_specialdate_lead_days"}}
+          <input type="number" name="special_summary_lead_days_{{$i}}" value="{{$d.SummaryLeadDays}}" min="0" data-role="summary_lead_days">
+        </label>
+        <label class="wide">{{call $.T "config_specialdate_description"}}
+          <input type="text" name="special_description_{{$i}}" value="{{$d.Description}}" size="50" data-role="description">
+        </label>
+        <label>{{call $.T "config_specialdate_description_icon"}}
+          <input type="text" name="special_description_icon_{{$i}}" value="{{$d.DescriptionIcon}}" placeholder="{{call $.T "config_specialdate_icon_placeholder"}}" size="24" data-role="description_icon">
+        </label>
+        <label>{{call $.T "config_specialdate_icon_scale"}}
+          <input type="number" name="special_description_icon_scale_{{$i}}" value="{{$d.DescriptionIconScale}}" min="0.1" step="0.1" size="4" data-role="description_icon_scale">
+        </label>
+        <label>{{call $.T "config_specialdate_lead_days"}}
+          <input type="number" name="special_description_lead_days_{{$i}}" value="{{$d.DescriptionLeadDays}}" min="0" data-role="description_lead_days">
+        </label>
+        {{if lt $i $.SpecialDateCount}}
+        <button type="submit" form="specialdate-delete-{{$i}}" class="danger">{{call $.T "config_specialdate_delete"}}</button>
+        {{end}}
+      </div>
+      <div class="specialdate-preview" data-specialdate-preview>
+        <h4>{{call $.T "config_specialdate_preview_heading"}}</h4>
+        <div class="specialdate-preview-row">
+          <span class="specialdate-preview-label">{{call $.T "config_specialdate_preview_marker"}}</span>
+          <span data-preview="marker"></span>
+        </div>
+        <div class="specialdate-preview-row">
+          <span class="specialdate-preview-label">{{call $.T "config_specialdate_preview_list"}}</span>
+          <span data-preview="list"></span>
+        </div>
+        <div class="specialdate-preview-row">
+          <span class="specialdate-preview-label">{{call $.T "config_specialdate_preview_summary"}}</span>
+          <span data-preview="summary"></span>
+        </div>
+        <div class="specialdate-preview-row">
+          <span class="specialdate-preview-label">{{call $.T "config_specialdate_preview_description"}}</span>
+          <span data-preview="description"></span>
+        </div>
+        <div class="specialdate-preview-test">
+          <button type="button" data-preview-test="upcoming">{{call $.T "config_specialdate_preview_test_upcoming"}}</button>
+          <button type="button" data-preview-test="today">{{call $.T "config_specialdate_preview_test_today"}}</button>
+        </div>
+        <div class="specialdate-preview-live" data-preview-live data-add-to-calendar-label="{{call $.T "add_to_calendar"}}"></div>
+      </div>
+    </div>
+    {{end}}
+    <input type="hidden" name="row_count" value="{{len .SpecialDateRows}}">
+    <button type="submit">{{call .T "config_save"}}</button>
+  </form>
+  {{range $i, $d := .SpecialDateRows}}
+  {{if lt $i $.SpecialDateCount}}
+  <form id="specialdate-delete-{{$i}}" method="post" action="{{url "/config/special-dates/delete"}}" class="specialdate-delete-form">
+    <input type="hidden" name="index" value="{{$i}}">
+  </form>
+  {{end}}
+  {{end}}
+  <form method="post" action="{{url "/config/special-dates/cleanup"}}" class="specialdate-cleanup-form">
+    <button type="submit">{{call .T "config_specialdates_cleanup"}}</button>
+  </form>
+</section>
+<script src="{{url "/static/special-dates.js"}}" defer></script>
+<script src="{{url "/static/flagdays.js"}}" defer></script>
+{{end}}
