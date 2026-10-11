@@ -219,6 +219,13 @@ type WeatherConfig struct {
 type WeatherCondition struct {
 	Condition string `yaml:"condition"`
 	Text      string `yaml:"text"`
+	// Icon, if set, additionally evaluates Condition separately for each
+	// day across the upcoming-schedule view's displayed weeks (as far
+	// ahead as the forecast source actually provides data for); any week
+	// with at least one matching day shows Icon in that week's
+	// flag-marker column, with a tooltip listing the matching day(s) and
+	// the value of every variable Condition referenced that day.
+	Icon string `yaml:"icon,omitempty"`
 }
 
 // User is a configuration-UI administrator account.

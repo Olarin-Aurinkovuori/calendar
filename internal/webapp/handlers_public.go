@@ -70,10 +70,13 @@ type WeekRowView struct {
 
 // MarkerIconView is one de-duplicated icon shown in a week row's
 // flag-marker column: the default 🇫🇮 for official flag days, plus one
-// entry per distinct special-date icon observed that week.
+// entry per distinct special-date icon observed that week, plus one entry
+// per weather condition (see config.WeatherCondition.Icon) that matched at
+// least one day that week.
 type MarkerIconView struct {
 	Icon    string
 	IsImage bool
+	Title   string // hover tooltip text, e.g. the special date's title or the weather condition's matching day(s)/values; empty for the default flag icon
 }
 
 // WeekFlagDayView is one flag day or special date shown within a week row.
@@ -134,7 +137,7 @@ type ScheduleMoreData struct {
 // buildWeekRows renders one WeekRowView per calendar week overlapping
 // [from, to], shared by the full info view and the "Show more" button's
 // fragment endpoint so both produce identical row markup/links.
-func buildWeekRows(sched *rotation.Schedule, season *rotation.Season, allFlags []flagDayParsed, allSpecial []specialDateParsed, from, to, todayMonday, now time.Time, tr *i18n.Translator, lang, dateFormat, weekNumberFormat string) []WeekRowView {
+func buildWeekRows(sched *rotation.Schedule, season *rotation.Season, allFlags []flagDayParsed, allSpecial []specialDateParsed, weatherMatches []weatherIconMatch, from, to, todayMonday, now time.Time, tr *i18n.Translator, lang, dateFormat, weekNumberFormat string) []WeekRowView {
 	recurIntervalDays := sched.RecurrenceIntervalDays()
 	titlePrefix := tr.T(lang, "calendar_event_title_prefix")
 	groupCalendarLinks := make(map[string]string)
@@ -154,6 +157,7 @@ func buildWeekRows(sched *rotation.Schedule, season *rotation.Season, allFlags [
 			row.SeasonTooltip = tr.T(lang, "schedule_season_winter_tooltip")
 		}
 		row.FlagDays, row.MarkerIcons = mergedWeekFlagDays(allFlags, allSpecial, week.Monday, week.Sunday, dateFormat)
+		row.MarkerIcons = append(row.MarkerIcons, weekWeatherMarkerIcons(weatherMatches, week.Monday, week.Sunday, dateFormat)...)
 		row.HasFlag = len(row.FlagDays) > 0
 		link, ok := groupCalendarLinks[row.GroupID]
 		if !ok {
@@ -229,7 +233,8 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 			}
 			from := now.AddDate(0, -cfg.Schedule.MonthsBefore, 0)
 			to := now.AddDate(0, cfg.Schedule.MonthsAfter, 0)
-			data.WeekRows = buildWeekRows(sched, season, allFlags, allSpecial, from, to, todayMonday, now, tr, lang, dateFormat, weekNumberFormat)
+			weatherMatches := s.weatherConditionIconMatches(r, cfg.Weather, now, to)
+			data.WeekRows = buildWeekRows(sched, season, allFlags, allSpecial, weatherMatches, from, to, todayMonday, now, tr, lang, dateFormat, weekNumberFormat)
 			data.ShowMoreWeeks = cfg.Schedule.ShowMoreWeeks
 			data.ScheduleNextFrom = rotation.MondayOf(to).AddDate(0, 0, 7).Format("2006-01-02")
 
@@ -290,6 +295,115 @@ func (s *Server) activeWeatherNotices(r *http.Request, cfg config.WeatherConfig,
 	})
 }
 
+// weatherIconMatch is one icon-bearing weather condition evaluated
+// independently per calendar day across an extended forecast window, for
+// the upcoming-schedule table's per-week marker-icon column.
+type weatherIconMatch struct {
+	Icon string
+	Text string
+	Days []weather.DayResult // only days where Matched is true
+}
+
+// weatherConditionIconMatches fetches (through s.weatherScheduleCache) the
+// configured forecast, if any, over [now, to], and evaluates every
+// condition with a non-empty Icon independently for each forecast day. It
+// returns nil without fetching anything if the feature is disabled or no
+// condition has an Icon. As with activeWeatherNotices, fetch errors or
+// invalid condition expressions are logged rather than failing the page
+// render. The forecast source's own horizon (typically a few days)
+// ultimately limits how far into "to" any data is actually returned for.
+func (s *Server) weatherConditionIconMatches(r *http.Request, cfg config.WeatherConfig, now, to time.Time) []weatherIconMatch {
+	if cfg.ForecastURLTemplate == "" {
+		return nil
+	}
+	var iconConditions []config.WeatherCondition
+	for _, c := range cfg.Conditions {
+		if c.Icon != "" {
+			iconConditions = append(iconConditions, c)
+		}
+	}
+	if len(iconConditions) == 0 {
+		return nil
+	}
+	lookaheadHours := int(to.Sub(now).Hours())
+	if lookaheadHours < cfg.LookaheadHours {
+		lookaheadHours = cfg.LookaheadHours
+	}
+	samples, err := s.weatherScheduleCache.Get(r.Context(), weather.Config{
+		ForecastURLTemplate:  cfg.ForecastURLTemplate,
+		Place:                cfg.Place,
+		LookaheadHours:       lookaheadHours,
+		RefreshIntervalHours: cfg.RefreshIntervalHours,
+	}, now)
+	if err != nil {
+		log.Printf("fetching weather forecast for schedule icons: %v", err)
+		return nil
+	}
+	var matches []weatherIconMatch
+	for _, c := range iconConditions {
+		results, err := weather.EvaluateByDay(samples, c.Condition, time.Local)
+		if err != nil {
+			log.Printf("weather condition %q: %v", c.Condition, err)
+			continue
+		}
+		m := weatherIconMatch{Icon: resolveWeatherIcon(c.Icon), Text: c.Text}
+		for _, dr := range results {
+			if dr.Matched {
+				m.Days = append(m.Days, dr)
+			}
+		}
+		if len(m.Days) > 0 {
+			matches = append(matches, m)
+		}
+	}
+	return matches
+}
+
+// weekWeatherMarkerIcons returns one MarkerIconView per weatherIconMatch
+// that matched at least one day within [weekMonday, weekSunday], with a
+// tooltip combining the condition's configured Text and, for each matching
+// day that week, the day's date plus the value of every variable the
+// condition's expression referenced that day.
+func weekWeatherMarkerIcons(matches []weatherIconMatch, weekMonday, weekSunday time.Time, dateFormat string) []MarkerIconView {
+	var icons []MarkerIconView
+	for _, m := range matches {
+		var lines []string
+		for _, d := range m.Days {
+			day, err := time.ParseInLocation("2006-01-02", d.Date, time.Local)
+			if err != nil || day.Before(weekMonday) || day.After(weekSunday) {
+				continue
+			}
+			parts := make([]string, 0, len(d.Values))
+			for _, v := range d.Values {
+				parts = append(parts, fmt.Sprintf("%s=%s", v.Variable, formatWeatherValue(v.Value)))
+			}
+			line := day.Format(dateFormat)
+			if len(parts) > 0 {
+				line += ": " + strings.Join(parts, ", ")
+			}
+			lines = append(lines, line)
+		}
+		if len(lines) == 0 {
+			continue
+		}
+		title := m.Text
+		if title != "" {
+			title += "\n"
+		}
+		title += strings.Join(lines, "\n")
+		icons = append(icons, MarkerIconView{Icon: m.Icon, IsImage: iconIsImage(m.Icon), Title: title})
+	}
+	return icons
+}
+
+// formatWeatherValue formats a weather variable's value for the schedule
+// icon tooltip, trimming trailing zeros (e.g. "2" rather than "2.000000",
+// but "2.5" kept as-is).
+func formatWeatherValue(v float64) string {
+	s := strconv.FormatFloat(v, 'f', -1, 64)
+	return s
+}
+
 // handleScheduleMore renders additional upcoming-schedule week rows as a
 // bare HTML fragment (a sequence of <tr> elements), for the info view's
 // "Show more" button to append to the existing table via fetch(), without a
@@ -344,12 +458,13 @@ func (s *Server) handleScheduleMore(w http.ResponseWriter, r *http.Request) {
 		}
 		todayMonday := rotation.MondayOf(now)
 		to := from.AddDate(0, 0, weeks*7-1)
+		weatherMatches := s.weatherConditionIconMatches(r, cfg.Weather, now, to)
 
 		data := ScheduleMoreData{
 			baseData:           base,
 			YearEndMonthsAhead: monthsUntilYearEnd(now),
 			TodayFlag:          flagDayOn(allFlags, now),
-			WeekRows:           buildWeekRows(sched, season, allFlags, allSpecial, from, to, todayMonday, now, tr, lang, dateFormat, weekNumberFormat),
+			WeekRows:           buildWeekRows(sched, season, allFlags, allSpecial, weatherMatches, from, to, todayMonday, now, tr, lang, dateFormat, weekNumberFormat),
 		}
 		s.renderScheduleMore(w, data)
 	})
@@ -561,7 +676,7 @@ func mergedWeekFlagDays(allFlags []flagDayParsed, allSpecial []specialDateParsed
 		}
 		if e.view.Icon != "" && !seenIcons[e.view.Icon] {
 			seenIcons[e.view.Icon] = true
-			markerIcons = append(markerIcons, MarkerIconView{Icon: e.view.Icon, IsImage: e.view.IconIsImage})
+			markerIcons = append(markerIcons, MarkerIconView{Icon: e.view.Icon, IsImage: e.view.IconIsImage, Title: e.view.Name})
 		}
 	}
 	if hasOfficial {

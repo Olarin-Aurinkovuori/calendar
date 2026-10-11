@@ -227,8 +227,8 @@ languages:
             references_heading: Lähdeviitteet
             references_unknown: ei tiedossa
             schedule_col_duty: Vuorossa
-            schedule_col_flag: Liputus
-            schedule_col_flag_days: Liputuspäivät
+            schedule_col_flag: Huom.
+            schedule_col_flag_days: Viikon erikoispäivät
             schedule_col_range: Ajanjakso
             schedule_col_week: Viikko
             schedule_has_flag_day: Tällä viikolla on liputuspäivä
@@ -454,7 +454,15 @@ special_dates: []
 # disable it entirely. When set, it fetches a short-term forecast and shows
 # the Text of every matching condition on the today's-summary view. See
 # WeatherConfig in internal/config/config.go for the full variable/operator
-# reference. Example (FMI, Espoo, refetched at most once every 4 hours):
+# reference. A condition may also set icon to additionally show that icon
+# in the upcoming-schedule table's marker column for any week with at least
+# one matching forecast day (as far ahead as the forecast source actually
+# has data for), with a tooltip listing the matching day(s) and the
+# variable values that triggered it. icon accepts a literal emoji/text/image
+# URL, one of the built-in shorthand names "slippery", "snow", "rain", or a
+# :emoji-name: shortcode (e.g. ":snowflake:", resolved the same way as
+# special_dates icon/summary_icon/description_icon fields, see below).
+# Example (FMI, Espoo, refetched at most once every 4 hours):
 #
 # weather:
 #     forecast_url_template: "https://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::forecast::harmonie::surface::point::multipointcoverage&place={place}&parameters=Temperature,Precipitation1h,SnowAccumulation&starttime={start}&endtime={end}&timestep=60"
@@ -464,8 +472,10 @@ special_dates: []
 #     conditions:
 #         - condition: "$MIN_TEMPERATURE <= 2"
 #           text: Risk of black ice overnight -- consider sanding the walkways.
+#           icon: slippery
 #         - condition: "$MAX_SNOW > 5cm"
 #           text: Significant snowfall expected -- prepare for snow removal.
+#           icon: snow
 weather: {}
 auth:
     users:

@@ -152,8 +152,10 @@
   <td>{{.GroupLabel}}</td>
   <td>{{.RangeLabel}}</td>
   <td class="flag-marker-cell">
+    {{if .MarkerIcons}}
+    <span class="flag-marker">{{range .MarkerIcons}}{{if .IsImage}}<img class="marker-icon-img" src="{{url .Icon}}" alt="" title="{{.Title}}">{{else}}<span title="{{.Title}}">{{.Icon}}</span>{{end}}{{end}}</span>
+    {{end}}
     {{if .HasFlag}}
-    <span class="flag-marker">{{range .MarkerIcons}}{{if .IsImage}}<img class="marker-icon-img" src="{{url .Icon}}" alt="">{{else}}{{.Icon}}{{end}}{{end}}</span>
     <div class="flag-tooltip">
       <p>{{call $.T "schedule_has_flag_day"}}</p>
       {{if and .IsCurrent $.TodayFlag}}

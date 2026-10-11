@@ -216,8 +216,14 @@ as the fields are edited, without a server round-trip). Each entry has:
 - If several special dates are active on the same day, all of them are
   shown (stacked), not just the nearest one.
 
-An icon field may be plain text/emoji, an already-local path, or a remote
-`http(s)://` URL. A submitted URL is downloaded once at save time
+An icon field may be plain text/emoji, an already-local path, a remote
+`http(s)://` URL, or a `:emoji-name:` shortcode (the same GitHub/Slack-style
+notation, e.g. `:snowflake:`, resolved via `github.com/kyokomi/emoji`'s
+code map in `internal/webapp/domain.go`'s `resolveIconShortcode`) — handy
+for typing an emoji by name instead of pasting the glyph. Shortcodes are
+resolved only when rendering for display (`collectSpecialDates`); the
+config-edit form and saved YAML keep the shortcode text as typed, so it
+stays readable/editable. A submitted URL is downloaded once at save time
 (`internal/icons.Fetch`) and cached under `static/special-icons/<hash>.<ext>`
 (hashed from the URL, so resaving the same URL reuses the cached file
 instead of re-fetching), following the same CWD-relative-to-the-process
@@ -283,6 +289,31 @@ forecast is cached (`internal/weather.Cache`, one shared instance per
 `webapp.Server`) and only refetched after `refresh_interval_hours`
 (default 4) has elapsed; a failed fetch is also logged and simply
 suppresses the notices for that request rather than failing the page.
+
+### Schedule-table marker icons
+
+A `conditions` entry may additionally set `icon`. When set, the
+upcoming-schedule table evaluates that condition independently for each
+calendar day across the schedule window (`internal/weather.EvaluateByDay`,
+via a second, separate `webapp.Server.weatherScheduleCache` instance --
+same `refresh_interval_hours`, but a wider window spanning however far the
+schedule table itself shows, so it doesn't share a cache entry/window with
+the shorter-range summary-card fetch above); any week with at least one
+matching day shows `icon` in that week's flag-marker column (alongside the
+official 🇫🇮 and any special-date icons), with a native `title` tooltip
+listing the matching day(s) and the value of every `$VARIABLE` the
+condition's expression referenced that day -- so admins can see exactly
+why it triggered. The forecast source's own horizon (typically a few
+days) ultimately limits how many of the schedule's weeks can actually show
+a weather icon, regardless of how far ahead the table itself extends.
+
+`icon` accepts a literal emoji/text/image URL, a `:emoji-name:` shortcode
+(see "Special dates" above), or one of the built-in shorthand names
+`slippery` (⛸️), `snow` (❄️), or `rain` (🌧️) -- resolved by
+`internal/webapp/domain.go`'s `resolveWeatherIcon`.
+
+Special-date marker icons (see "Special dates" above) also get a `title`
+tooltip, showing that date's `title` text.
 
 ## CLI flags
 

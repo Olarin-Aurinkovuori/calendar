@@ -231,7 +231,9 @@ of date/name/mandatory entries).
 An optional `weather` section can show admin-configured hint text on the
 today's-summary view based on a short-term temperature/rainfall/snow
 forecast (e.g. from the FMI open data API) and simple threshold
-conditions (e.g. `"$MIN_TEMPERATURE <= 2"`); see
+conditions (e.g. `"$MIN_TEMPERATURE <= 2"`); a condition can also set an
+`icon` to show that icon in the upcoming-schedule table's marker column
+for any week with a matching forecast day. See
 [`docs/calendar/README.md`](../../docs/calendar/README.md#weather-forecast-notices)
 for the full variable/operator reference. Leave it unset to disable the
 feature.

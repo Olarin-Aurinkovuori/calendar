@@ -81,13 +81,14 @@ func publicAssetOrigins() []AssetOrigin {
 
 // Server holds everything needed to serve HTTP requests.
 type Server struct {
-	store               *config.Store
-	tmplIndex           *template.Template
-	tmplConfig          *template.Template
-	mux                 *http.ServeMux
-	trustProxyUserParam string
-	basePath            string
-	weatherCache        weather.Cache
+	store                *config.Store
+	tmplIndex            *template.Template
+	tmplConfig           *template.Template
+	mux                  *http.ServeMux
+	trustProxyUserParam  string
+	basePath             string
+	weatherCache         weather.Cache // today's-summary notices: a single lookahead_hours-wide window
+	weatherScheduleCache weather.Cache // per-week marker icons: a wider window spanning the displayed schedule
 }
 
 // New builds a Server backed by the given configuration store. Each page is

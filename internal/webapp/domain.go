@@ -1,11 +1,13 @@
 package webapp
 
 import (
+	"regexp"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/Olarin-Aurinkovuori/calendar/internal/config"
+	"github.com/kyokomi/emoji/v2"
 )
 
 // flagDayParsed pairs a FlagDay with its parsed date for sorting/comparison.
@@ -123,7 +125,11 @@ type specialDateParsed struct {
 }
 
 // collectSpecialDates parses and sorts every configured special date into
-// one chronological slice. Entries with unparsable dates are skipped.
+// one chronological slice, resolving any :emoji-name: shortcode icon
+// fields (see resolveIconShortcode) to their actual emoji for display.
+// Entries with unparsable dates are skipped. The original config is left
+// untouched -- the config-edit form reads config.SpecialDate directly, so
+// admins still see/edit the shortcode text they typed.
 func collectSpecialDates(entries []config.SpecialDate) []specialDateParsed {
 	var out []specialDateParsed
 	for _, sd := range entries {
@@ -131,6 +137,9 @@ func collectSpecialDates(entries []config.SpecialDate) []specialDateParsed {
 		if err != nil {
 			continue
 		}
+		sd.Icon = resolveIconShortcode(sd.Icon)
+		sd.SummaryIcon = resolveIconShortcode(sd.SummaryIcon)
+		sd.DescriptionIcon = resolveIconShortcode(sd.DescriptionIcon)
 		out = append(out, specialDateParsed{Date: t, SpecialDate: sd})
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Date.Before(out[j].Date) })
@@ -175,4 +184,49 @@ func iconIsImage(icon string) bool {
 		}
 	}
 	return false
+}
+
+// builtinWeatherIcons maps a config.WeatherCondition.Icon shorthand name to
+// a default emoji, so admins don't need to look up/paste emoji themselves
+// for common condition kinds. Any Icon value not matching one of these
+// names (case-insensitively) -- including any other emoji, text, or image
+// URL/path -- is used as-is.
+var builtinWeatherIcons = map[string]string{
+	"slippery": "⛸️",
+	"snow":     "❄️",
+	"rain":     "🌧️",
+}
+
+// resolveWeatherIcon expands a WeatherCondition.Icon shorthand name (see
+// builtinWeatherIcons) to its built-in emoji, falling back to :emoji-name:
+// shortcode resolution (see resolveIconShortcode), or returns icon
+// unchanged if neither matches.
+func resolveWeatherIcon(icon string) string {
+	if resolved, ok := builtinWeatherIcons[strings.ToLower(icon)]; ok {
+		return resolved
+	}
+	return resolveIconShortcode(icon)
+}
+
+// emojiShortcodePattern matches a whole icon field value consisting of a
+// single :shortcode: (e.g. ":snowflake:", ":cloud_with_rain:"), the same
+// GitHub/Slack-style notation recognized by the github.com/kyokomi/emoji
+// package's code map.
+var emojiShortcodePattern = regexp.MustCompile(`^:[a-zA-Z0-9_+-]+:$`)
+
+// resolveIconShortcode expands an icon field value given as a single
+// :emoji-name: shortcode (see emojiShortcodePattern) to the actual emoji
+// character(s), so admins can type e.g. ":snowflake:" instead of having to
+// paste an emoji glyph. Any value that isn't a recognized shortcode --
+// including plain emoji, text, image URLs/paths, or an unrecognized
+// ":something:" -- is returned unchanged.
+func resolveIconShortcode(icon string) string {
+	trimmed := strings.TrimSpace(icon)
+	if !emojiShortcodePattern.MatchString(trimmed) {
+		return icon
+	}
+	if resolved, ok := emoji.CodeMap()[trimmed]; ok {
+		return resolved
+	}
+	return icon
 }
