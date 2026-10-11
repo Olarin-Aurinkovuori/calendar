@@ -84,6 +84,19 @@ languages:
             config_users_file_label: External users file
             config_users_file_placeholder: e.g. users.yaml
             config_users_heading: Administrators
+            config_weather_condition_expression: Condition expression
+            config_weather_condition_expression_placeholder: "e.g. $MIN_TEMPERATURE <= 2"
+            config_weather_condition_icon: Icon (emoji, image URL/path, or built-in name)
+            config_weather_condition_icon_placeholder: "e.g. slippery, snow, rain, or :snowflake:"
+            config_weather_condition_text: Text (shown on today's summary when true)
+            config_weather_conditions_heading: Conditions
+            config_weather_conditions_hint: "Each condition's text is shown on the summary view whenever it evaluates true against the forecast; if it also has an icon, upcoming weeks whose forecast matches it show that icon too. See the README for the full $MIN_/$MAX_/$MEAN_/$AVG_ TEMPERATURE/RAINFALL/SNOW variable and <, <=, >, >=, &&, || operator reference."
+            config_weather_forecast_url_template: "Forecast source URL template (include {place}, {start}, {end})"
+            config_weather_heading: Weather forecast
+            config_weather_hint: "Optional: fetches a short-term forecast and evaluates threshold conditions against it. Leave the URL template blank to disable this feature entirely."
+            config_weather_lookahead_hours: Lookahead (hours)
+            config_weather_place: Place
+            config_weather_refresh_interval_hours: "Refetch at most every (hours)"
             current_duty_label: "On duty: %s"
             date_format: Jan 2, 2006
             duty_period_label: "Duty period: %s"
@@ -198,6 +211,19 @@ languages:
             config_users_file_label: Ulkoinen käyttäjätiedosto
             config_users_file_placeholder: esim. users.yaml
             config_users_heading: Pääkäyttäjät
+            config_weather_condition_expression: Ehtolauseke
+            config_weather_condition_expression_placeholder: "esim. $MIN_TEMPERATURE <= 2"
+            config_weather_condition_icon: Kuvake (emoji, kuvan URL/polku tai sisäänrakennettu nimi)
+            config_weather_condition_icon_placeholder: "esim. slippery, snow, rain tai :snowflake:"
+            config_weather_condition_text: Teksti (näytetään päivän yhteenvedossa kun ehto toteutuu)
+            config_weather_conditions_heading: Ehdot
+            config_weather_conditions_hint: "Ehdon teksti näytetään yhteenvetonäkymässä aina kun se toteutuu ennusteen perusteella; jos ehdolla on myös kuvake, näyttävät sitä vastaavat tulevat viikot myös sen kuvakkeen. Katso README:stä täysi $MIN_/$MAX_/$MEAN_/$AVG_ TEMPERATURE/RAINFALL/SNOW-muuttuja- ja <, <=, >, >=, &&, ||-operaattoriviite."
+            config_weather_forecast_url_template: "Ennustelähteen URL-malli (sisällytä {place}, {start}, {end})"
+            config_weather_heading: Sääennuste
+            config_weather_hint: "Valinnainen: hakee lyhyen aikavälin sääennusteen ja arvioi sille asetetut raja-arvoehdot. Jätä URL-malli tyhjäksi poistaaksesi ominaisuuden käytöstä kokonaan."
+            config_weather_lookahead_hours: Ennustejakso (tuntia)
+            config_weather_place: Paikkakunta
+            config_weather_refresh_interval_hours: "Hae uudelleen enintään joka (tuntia)"
             current_duty_label: "Vuorossa: %s"
             date_format: 2.1.2006
             duty_period_label: "Vuoro: %s"
@@ -450,9 +476,9 @@ flagging_days:
                   name: Jean Sibeliuksen päivä, suomalaisen musiikin päivä
                   mandatory: true
 special_dates: []
-# weather is optional: leave forecast_url_template empty (the default) to
-# disable it entirely. When set, it fetches a short-term forecast and shows
-# the Text of every matching condition on the today's-summary view. See
+# weather is optional: leave forecast_url_template empty to disable it
+# entirely. When set, it fetches a short-term forecast and shows the Text
+# of every matching condition on the today's-summary view. See
 # WeatherConfig in internal/config/config.go for the full variable/operator
 # reference. A condition may also set icon to additionally show that icon
 # in the upcoming-schedule table's marker column for any week with at least
@@ -462,21 +488,25 @@ special_dates: []
 # URL, one of the built-in shorthand names "slippery", "snow", "rain", or a
 # :emoji-name: shortcode (e.g. ":snowflake:", resolved the same way as
 # special_dates icon/summary_icon/description_icon fields, see below).
-# Example (FMI, Espoo, refetched at most once every 4 hours):
 #
-# weather:
-#     forecast_url_template: "https://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::forecast::harmonie::surface::point::multipointcoverage&place={place}&parameters=Temperature,Precipitation1h,SnowAccumulation&starttime={start}&endtime={end}&timestep=60"
-#     place: espoo
-#     lookahead_hours: 24
-#     refresh_interval_hours: 4
-#     conditions:
-#         - condition: "$MIN_TEMPERATURE <= 2"
-#           text: Risk of black ice overnight -- consider sanding the walkways.
-#           icon: slippery
-#         - condition: "$MAX_SNOW > 5cm"
-#           text: Significant snowfall expected -- prepare for snow removal.
-#           icon: snow
-weather: {}
+# forecast_url_template/place below are the FMI (Harmonie surface model)
+# endpoint and Espoo place name used while developing/testing this feature;
+# conditions is left empty by default -- two illustrative examples that
+# pair with the built-in "slippery"/"snow" icons:
+#
+# conditions:
+#     - condition: "$MIN_TEMPERATURE <= 2"
+#       text: Risk of black ice overnight -- consider sanding the walkways.
+#       icon: slippery
+#     - condition: "$MAX_SNOW > 5cm"
+#       text: Significant snowfall expected -- prepare for snow removal.
+#       icon: snow
+weather:
+    forecast_url_template: "https://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::forecast::harmonie::surface::point::multipointcoverage&place={place}&parameters=Temperature,Precipitation1h,SnowAccumulation&starttime={start}&endtime={end}&timestep=60"
+    place: espoo
+    lookahead_hours: 24
+    refresh_interval_hours: 4
+    conditions: []
 auth:
     users:
         - username: admin

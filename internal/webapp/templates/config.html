@@ -235,6 +235,48 @@
     <button type="submit">{{call .T "config_specialdates_cleanup"}}</button>
   </form>
 </section>
+
+<section class="card">
+  <h2>{{call .T "config_weather_heading"}}</h2>
+  <p class="muted">{{call .T "config_weather_hint"}}</p>
+  <form method="post" action="{{url "/config/weather"}}">
+    <label class="wide">{{call .T "config_weather_forecast_url_template"}}
+      <input type="text" name="forecast_url_template" value="{{.ForecastURLTemplate}}" size="90">
+    </label>
+    <label>{{call .T "config_weather_place"}}
+      <input type="text" name="place" value="{{.Place}}" size="20">
+    </label>
+    <label>{{call .T "config_weather_lookahead_hours"}}
+      <input type="number" name="lookahead_hours" min="1" value="{{.LookaheadHours}}">
+    </label>
+    <label>{{call .T "config_weather_refresh_interval_hours"}}
+      <input type="number" name="refresh_interval_hours" min="1" value="{{.RefreshIntervalHours}}">
+    </label>
+    <h3>{{call .T "config_weather_conditions_heading"}}</h3>
+    <p class="muted">{{call .T "config_weather_conditions_hint"}}</p>
+    <p class="muted">{{call .T "config_row_hint"}}</p>
+    <table class="editable">
+      <thead>
+        <tr>
+          <th>{{call .T "config_weather_condition_expression"}}</th>
+          <th>{{call .T "config_weather_condition_text"}}</th>
+          <th>{{call .T "config_weather_condition_icon"}}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range $i, $c := .WeatherConditionRows}}
+        <tr>
+          <td><input type="text" name="weather_condition_{{$i}}" value="{{$c.Condition}}" size="40" placeholder="{{call $.T "config_weather_condition_expression_placeholder"}}"></td>
+          <td><input type="text" name="weather_text_{{$i}}" value="{{$c.Text}}" size="40"></td>
+          <td><input type="text" name="weather_icon_{{$i}}" value="{{$c.Icon}}" size="16" placeholder="{{call $.T "config_weather_condition_icon_placeholder"}}"></td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+    <input type="hidden" name="condition_row_count" value="{{len .WeatherConditionRows}}">
+    <button type="submit">{{call .T "config_save"}}</button>
+  </form>
+</section>
 <script src="{{url "/static/special-dates.js"}}" defer></script>
 <script src="{{url "/static/flagdays.js"}}" defer></script>
 {{end}}

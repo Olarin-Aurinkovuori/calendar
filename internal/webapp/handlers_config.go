@@ -15,6 +15,7 @@ import (
 	"github.com/Olarin-Aurinkovuori/calendar/internal/flagdays"
 	"github.com/Olarin-Aurinkovuori/calendar/internal/i18n"
 	"github.com/Olarin-Aurinkovuori/calendar/internal/icons"
+	"github.com/Olarin-Aurinkovuori/calendar/internal/weather"
 )
 
 // GroupRow is one editable row in the duty-group table.
@@ -53,6 +54,13 @@ type SpecialDateRow struct {
 	DescriptionLeadDays  int
 }
 
+// WeatherConditionRow is one editable weather threshold-condition entry.
+type WeatherConditionRow struct {
+	Condition string
+	Text      string
+	Icon      string
+}
+
 // LanguageBlockView is one language's editable translation block.
 type LanguageBlockView struct {
 	Code        string
@@ -78,11 +86,18 @@ type ConfigData struct {
 	UsersFile         string
 	SpecialDateRows   []SpecialDateRow
 	SpecialDateCount  int // number of SpecialDateRows backed by an actually-saved entry (excludes trailing blank rows), for per-row delete buttons
+
+	ForecastURLTemplate  string
+	Place                string
+	LookaheadHours       int
+	RefreshIntervalHours int
+	WeatherConditionRows []WeatherConditionRow
 }
 
 const blankExtraGroupRows = 3
 const blankExtraFlagRows = 5
 const blankExtraSpecialDateRows = 2
+const blankExtraWeatherConditionRows = 2
 
 func buildConfigData(r *http.Request, s *Server, cfg *config.Config, users []config.User, flagYears map[string]*config.FlagYear, flash string) ConfigData {
 	tr := i18n.New(cfg.Languages, cfg.DefaultLanguage)
@@ -167,6 +182,21 @@ func buildConfigData(r *http.Request, s *Server, cfg *config.Config, users []con
 	data.SpecialDateCount = len(cfg.SpecialDates)
 	for i := 0; i < blankExtraSpecialDateRows; i++ {
 		data.SpecialDateRows = append(data.SpecialDateRows, SpecialDateRow{SummaryIconScale: 1, DescriptionIconScale: 1})
+	}
+
+	data.ForecastURLTemplate = cfg.Weather.ForecastURLTemplate
+	data.Place = cfg.Weather.Place
+	data.LookaheadHours = cfg.Weather.LookaheadHours
+	data.RefreshIntervalHours = cfg.Weather.RefreshIntervalHours
+	for _, c := range cfg.Weather.Conditions {
+		data.WeatherConditionRows = append(data.WeatherConditionRows, WeatherConditionRow{
+			Condition: c.Condition,
+			Text:      c.Text,
+			Icon:      c.Icon,
+		})
+	}
+	for i := 0; i < blankExtraWeatherConditionRows; i++ {
+		data.WeatherConditionRows = append(data.WeatherConditionRows, WeatherConditionRow{})
 	}
 
 	return data
@@ -757,6 +787,61 @@ func (s *Server) handleConfigSpecialDatesCleanup(w http.ResponseWriter, r *http.
 			}
 		}
 		cfg.SpecialDates = kept
+		return nil
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	s.redirectToConfig(w, r, "saved")
+}
+
+// handleConfigWeather replaces the forecast settings (source URL template,
+// place, lookahead/refresh-interval hours) and the full list of threshold
+// conditions from the submitted indexed rows, dropping any row whose
+// condition expression is blank. Each remaining expression is validated via
+// weather.Evaluate (with a lookup that treats every $VARIABLE as present,
+// so only the expression's syntax -- not live forecast data -- is
+// checked) before saving, so a typo can't silently disable the feature.
+func (s *Server) handleConfigWeather(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "bad form", http.StatusBadRequest)
+		return
+	}
+	forecastURLTemplate := strings.TrimSpace(r.FormValue("forecast_url_template"))
+	place := strings.TrimSpace(r.FormValue("place"))
+	lookaheadHours, _ := strconv.Atoi(r.FormValue("lookahead_hours"))
+	refreshIntervalHours, _ := strconv.Atoi(r.FormValue("refresh_interval_hours"))
+	rowCount, _ := strconv.Atoi(r.FormValue("condition_row_count"))
+
+	var conditions []config.WeatherCondition
+	for i := 0; i < rowCount; i++ {
+		expr := strings.TrimSpace(r.FormValue(fmt.Sprintf("weather_condition_%d", i)))
+		if expr == "" {
+			continue
+		}
+		if _, err := weather.Evaluate(expr, func(string) (float64, bool) { return 0, true }); err != nil {
+			s.redirectToConfig(w, r, "invalid_weather_condition")
+			return
+		}
+		icon, err := resolveSpecialIcon(r.Context(), strings.TrimSpace(r.FormValue(fmt.Sprintf("weather_icon_%d", i))))
+		if err != nil {
+			s.redirectToConfig(w, r, "icon_fetch_failed")
+			return
+		}
+		conditions = append(conditions, config.WeatherCondition{
+			Condition: expr,
+			Text:      strings.TrimSpace(r.FormValue(fmt.Sprintf("weather_text_%d", i))),
+			Icon:      icon,
+		})
+	}
+
+	err := s.store.Update(func(cfg *config.Config) error {
+		cfg.Weather.ForecastURLTemplate = forecastURLTemplate
+		cfg.Weather.Place = place
+		cfg.Weather.LookaheadHours = lookaheadHours
+		cfg.Weather.RefreshIntervalHours = refreshIntervalHours
+		cfg.Weather.Conditions = conditions
 		return nil
 	})
 	if err != nil {

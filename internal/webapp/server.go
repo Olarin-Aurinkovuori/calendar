@@ -191,6 +191,7 @@ func (s *Server) routes() {
 	s.mux.Handle("POST "+bp+"/config/special-dates", s.requireAuth(http.HandlerFunc(s.handleConfigSpecialDates)))
 	s.mux.Handle("POST "+bp+"/config/special-dates/delete", s.requireAuth(http.HandlerFunc(s.handleConfigSpecialDateDelete)))
 	s.mux.Handle("POST "+bp+"/config/special-dates/cleanup", s.requireAuth(http.HandlerFunc(s.handleConfigSpecialDatesCleanup)))
+	s.mux.Handle("POST "+bp+"/config/weather", s.requireAuth(http.HandlerFunc(s.handleConfigWeather)))
 
 	if bp != "" {
 		// A request to the bare prefix without a trailing slash (e.g.
