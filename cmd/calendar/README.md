@@ -228,6 +228,14 @@ of groups, a rotation start date, and a period length in days) and the
 flag-day layout (one entry per year with a source URL template and a list
 of date/name/mandatory entries).
 
+An optional `weather` section can show admin-configured hint text on the
+today's-summary view based on a short-term temperature/rainfall/snow
+forecast (e.g. from the FMI open data API) and simple threshold
+conditions (e.g. `"$MIN_TEMPERATURE <= 2"`); see
+[`docs/calendar/README.md`](../../docs/calendar/README.md#weather-forecast-notices)
+for the full variable/operator reference. Leave it unset to disable the
+feature.
+
 For the reasoning behind these design choices, see
 [`docs/calendar/README.md`](../../docs/calendar/README.md).
 

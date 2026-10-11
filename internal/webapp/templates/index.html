@@ -82,6 +82,14 @@
     {{end}}
   </div>
   {{end}}
+
+  {{if .WeatherNotices}}
+  <div class="weather-notices">
+    {{range .WeatherNotices}}
+    <p class="weather-notice">{{.}}</p>
+    {{end}}
+  </div>
+  {{end}}
 </section>
 
 <section class="card schedule-card">

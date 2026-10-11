@@ -13,6 +13,7 @@ import (
 	"github.com/Olarin-Aurinkovuori/calendar/internal/i18n"
 	"github.com/Olarin-Aurinkovuori/calendar/internal/ical"
 	"github.com/Olarin-Aurinkovuori/calendar/internal/rotation"
+	"github.com/Olarin-Aurinkovuori/calendar/internal/weather"
 )
 
 // IndexData is the template data for the home/info view.
@@ -31,8 +32,9 @@ type IndexData struct {
 	YearEndMonthsAhead int                    // months-ahead value covering the rest of the year (or into next year, if that's under a month)
 	FlagSources        []FlagSourceView
 	AssetOrigins       []AssetOriginView
-	ShowMoreWeeks      int    // step size, in weeks, the "Show more" button loads per click
-	ScheduleNextFrom   string // YYYY-MM-DD Monday right after the last rendered week row, for the "Show more" button's first request
+	ShowMoreWeeks      int      // step size, in weeks, the "Show more" button loads per click
+	ScheduleNextFrom   string   // YYYY-MM-DD Monday right after the last rendered week row, for the "Show more" button's first request
+	WeatherNotices     []string // text of every configured weather condition (see config.WeatherConfig) currently true
 }
 
 // FlagSourceView describes where one calendar year's flag day data comes
@@ -253,7 +255,38 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 			data.NextFlag = next
 		}
 
+		data.WeatherNotices = s.activeWeatherNotices(r, cfg.Weather, now)
+
 		s.renderIndex(w, data)
+	})
+}
+
+// activeWeatherNotices fetches (through s.weatherCache) the configured
+// forecast, if any, and returns the text of every condition that currently
+// evaluates true against it. It returns nil without fetching anything if
+// cfg.ForecastURLTemplate is empty (the feature is disabled), and logs --
+// rather than failing the page render -- fetch errors or individually
+// invalid condition expressions.
+func (s *Server) activeWeatherNotices(r *http.Request, cfg config.WeatherConfig, now time.Time) []string {
+	if cfg.ForecastURLTemplate == "" {
+		return nil
+	}
+	samples, err := s.weatherCache.Get(r.Context(), weather.Config{
+		ForecastURLTemplate:  cfg.ForecastURLTemplate,
+		Place:                cfg.Place,
+		LookaheadHours:       cfg.LookaheadHours,
+		RefreshIntervalHours: cfg.RefreshIntervalHours,
+	}, now)
+	if err != nil {
+		log.Printf("fetching weather forecast: %v", err)
+		return nil
+	}
+	conditions := make([]weather.Condition, len(cfg.Conditions))
+	for i, c := range cfg.Conditions {
+		conditions[i] = weather.Condition{Expression: c.Condition, Text: c.Text}
+	}
+	return weather.ActiveNotices(samples, conditions, func(condition string, err error) {
+		log.Printf("weather condition %q: %v", condition, err)
 	})
 }
 

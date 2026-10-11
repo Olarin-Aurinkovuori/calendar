@@ -23,6 +23,7 @@ type Config struct {
 	Schedule        ScheduleConfig      `yaml:"schedule"`
 	FlaggingDays    FlaggingDaysConfig  `yaml:"flagging_days"`
 	SpecialDates    []SpecialDate       `yaml:"special_dates"`
+	Weather         WeatherConfig       `yaml:"weather"`
 	Auth            AuthConfig          `yaml:"auth"`
 }
 
@@ -178,6 +179,48 @@ func splitYearTemplate(tmpl string) (prefix, suffix string, ok bool) {
 	return tmpl[:idx], tmpl[idx+len(yearPlaceholder):], true
 }
 
+// WeatherConfig configures an optional short-term forecast feed (from the
+// Finnish Meteorological Institute's open data WFS API, or anything
+// returning the same "multipointcoverage" response shape) and a list of
+// simple threshold conditions evaluated against it; every condition that
+// evaluates true has its Text shown on the today's-summary view.
+//
+// Conditions reference "$MIN_"/"$MAX_"/"$MEAN_"/"$AVG_" ("MEAN"/"AVG" are
+// synonyms) prefixed variables -- "TEMPERATURE" (°C), "RAINFALL" (mm,
+// FMI's hourly "Precipitation1h"), and "SNOW" (cm, FMI's cumulative
+// "SnowAccumulation" -- so MAX_SNOW is the total accumulated over the
+// window) -- combined with <, <=, >, >=, &&, ||, and parentheses, e.g.
+// "($MIN_TEMPERATURE < 0 && $MAX_TEMPERATURE < 5) || $MAX_SNOW > 5cm".
+// Leave ForecastURLTemplate empty to disable the feature entirely.
+type WeatherConfig struct {
+	// ForecastURLTemplate is the forecast API request URL, with the
+	// literal placeholders "{place}", "{start}", and "{end}" substituted
+	// at fetch time ({start}/{end} are UTC RFC3339 timestamps spanning
+	// LookaheadHours from now). Example (FMI, Harmonie surface model):
+	// "https://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::forecast::harmonie::surface::point::multipointcoverage&place={place}&parameters=Temperature,Precipitation1h,SnowAccumulation&starttime={start}&endtime={end}&timestep=60"
+	ForecastURLTemplate string `yaml:"forecast_url_template,omitempty"`
+	// Place is substituted for the "{place}" placeholder (e.g. an FMI
+	// place name like "espoo").
+	Place string `yaml:"place,omitempty"`
+	// LookaheadHours is how far ahead of now the forecast window extends
+	// (default 24).
+	LookaheadHours int `yaml:"lookahead_hours,omitempty"`
+	// RefreshIntervalHours is how long a fetched forecast is reused
+	// before refetching, so the upstream API isn't hit on every page
+	// load (default 4).
+	RefreshIntervalHours int                `yaml:"refresh_interval_hours,omitempty"`
+	Conditions           []WeatherCondition `yaml:"conditions,omitempty"`
+}
+
+// WeatherCondition is one threshold expression (see WeatherConfig) paired
+// with the hint text shown on the today's-summary view when it is true.
+// Every condition that evaluates true has its Text shown (not just the
+// first match), in Conditions' order.
+type WeatherCondition struct {
+	Condition string `yaml:"condition"`
+	Text      string `yaml:"text"`
+}
+
 // User is a configuration-UI administrator account.
 type User struct {
 	Username     string `yaml:"username"`
@@ -312,6 +355,14 @@ func normalize(cfg *Config) {
 	}
 	if cfg.Schedule.ShowMoreWeeks <= 0 {
 		cfg.Schedule.ShowMoreWeeks = 12
+	}
+	if cfg.Weather.ForecastURLTemplate != "" {
+		if cfg.Weather.LookaheadHours <= 0 {
+			cfg.Weather.LookaheadHours = 24
+		}
+		if cfg.Weather.RefreshIntervalHours <= 0 {
+			cfg.Weather.RefreshIntervalHours = 4
+		}
 	}
 	for i := range cfg.SpecialDates {
 		if cfg.SpecialDates[i].SummaryLeadDays < 0 {

@@ -450,6 +450,23 @@ flagging_days:
                   name: Jean Sibeliuksen päivä, suomalaisen musiikin päivä
                   mandatory: true
 special_dates: []
+# weather is optional: leave forecast_url_template empty (the default) to
+# disable it entirely. When set, it fetches a short-term forecast and shows
+# the Text of every matching condition on the today's-summary view. See
+# WeatherConfig in internal/config/config.go for the full variable/operator
+# reference. Example (FMI, Espoo, refetched at most once every 4 hours):
+#
+# weather:
+#     forecast_url_template: "https://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::forecast::harmonie::surface::point::multipointcoverage&place={place}&parameters=Temperature,Precipitation1h,SnowAccumulation&starttime={start}&endtime={end}&timestep=60"
+#     place: espoo
+#     lookahead_hours: 24
+#     refresh_interval_hours: 4
+#     conditions:
+#         - condition: "$MIN_TEMPERATURE <= 2"
+#           text: Risk of black ice overnight -- consider sanding the walkways.
+#         - condition: "$MAX_SNOW > 5cm"
+#           text: Significant snowfall expected -- prepare for snow removal.
+weather: {}
 auth:
     users:
         - username: admin

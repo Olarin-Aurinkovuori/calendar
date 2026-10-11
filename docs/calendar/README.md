@@ -233,6 +233,57 @@ the same heuristic in both Go (`internal/webapp/domain.go`'s
 manually in sync) — a `http://`/`https://` prefix, a leading `/`, or a
 recognized image extension.
 
+## Weather forecast notices
+
+`config.WeatherConfig` (`weather` in the YAML file) is an optional
+feature, disabled by leaving `forecast_url_template` empty (the default):
+when set, the today's-summary view shows the `text` of every configured
+`conditions` entry whose `condition` expression currently evaluates true
+against a short-term forecast.
+
+`forecast_url_template` is the forecast request URL with the literal
+placeholders `{place}`, `{start}`, and `{end}` substituted at fetch time
+(`{start}`/`{end}` are UTC RFC3339 timestamps spanning
+`lookahead_hours` — default 24 — from now); `place` is substituted for
+`{place}`. It is written against the Finnish Meteorological Institute's
+(FMI) open data WFS `multipointcoverage` stored query, e.g.:
+
+```
+https://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::forecast::harmonie::surface::point::multipointcoverage&place={place}&parameters=Temperature,Precipitation1h,SnowAccumulation&starttime={start}&endtime={end}&timestep=60
+```
+
+`internal/weather.Parse` reads that response shape generically (matching
+GML/XML elements by local name, so it tolerates the real response's
+`wfs:`/`gml:`/`gmlcov:`/etc. namespace prefixes): the `parameters=` list's
+field names map to the condition variables below, and any other/unknown
+field is parsed but ignored.
+
+A `condition` is a boolean expression over `$MIN_`/`$MAX_`/`$MEAN_`/`$AVG_`
+("`MEAN`"/"`AVG`" are synonyms) prefixed variables — `TEMPERATURE` (°C,
+FMI's `Temperature`), `RAINFALL` (mm, FMI's hourly `Precipitation1h`), and
+`SNOW` (cm, FMI's cumulative `SnowAccumulation`, so `MAX_SNOW` is the total
+accumulated over the window) — each aggregated over every forecast point
+in the window, combined with `<`, `<=`, `>`, `>=`, `&&`, `||`, and
+parentheses for grouping, e.g.:
+
+```
+($MIN_TEMPERATURE < 0 && $MAX_TEMPERATURE < 5) || $MAX_SNOW > 5cm
+```
+
+A number may carry a trailing unit suffix (e.g. `5cm`) purely for
+readability — `internal/weather.Evaluate` parses and discards it rather
+than converting units, so it must match the variable's native unit.
+Every condition that evaluates true has its `text` shown (not just the
+first match), in `conditions`' configured order; a condition with invalid
+syntax, or one referencing a variable the response didn't include, is
+logged and skipped rather than failing the page render.
+
+To avoid hammering the upstream API on every page load, the fetched
+forecast is cached (`internal/weather.Cache`, one shared instance per
+`webapp.Server`) and only refetched after `refresh_interval_hours`
+(default 4) has elapsed; a failed fetch is also logged and simply
+suppresses the notices for that request rather than failing the page.
+
 ## CLI flags
 
 `-config`, `-listen`, `-base-path`, `-dump-default-config`,

@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/Olarin-Aurinkovuori/calendar/internal/config"
+	"github.com/Olarin-Aurinkovuori/calendar/internal/weather"
 )
 
 //go:embed templates/*.html
@@ -86,6 +87,7 @@ type Server struct {
 	mux                 *http.ServeMux
 	trustProxyUserParam string
 	basePath            string
+	weatherCache        weather.Cache
 }
 
 // New builds a Server backed by the given configuration store. Each page is

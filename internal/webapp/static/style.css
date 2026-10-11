@@ -194,6 +194,16 @@ table.schedule-table tr:hover .season-tooltip { display: block; }
 .special-icon-tooltip { width: calc(3.5em * var(--icon-scale, 1)); height: calc(3.5em * var(--icon-scale, 1)); object-fit: contain; }
 .special-icon-tooltip-emoji { font-size: calc(3.5em * var(--icon-scale, 1)); line-height: 1; }
 
+.weather-notices { margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.weather-notice {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: #fff7e6;
+  border: 1px solid #f6c453;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
 .specialdate-entry { border-top: 1px solid #e2e8f0; padding-top: 1rem; margin-top: 1rem; }
 .specialdate-fields { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; }
 .specialdate-fields label { display: flex; flex-direction: column; font-size: 0.85rem; gap: 0.2rem; margin: 0; }
