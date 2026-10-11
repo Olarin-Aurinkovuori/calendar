@@ -8,7 +8,9 @@
 # Build stage: compile a fully static binary (CGO disabled) so it can run
 # unmodified on the distroless "static" base below, which has no libc/shell.
 # ---------------------------------------------------------------------------
-FROM golang:1.26-alpine AS builder
+ARG GO_VERSION=1.26
+
+FROM golang:${GO_VERSION}-bookworm AS builder
 
 WORKDIR /src
 
@@ -35,7 +37,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
 # optional template/static overrides -- lives under /data, a single volume
 # mount point kept entirely separate from the read-only application layer.
 # ---------------------------------------------------------------------------
-FROM gcr.io/distroless/static-debian12:nonroot
+FROM gcr.io/distroless/static:nonroot
 
 COPY --from=builder /out/calendar /app/calendar
 
