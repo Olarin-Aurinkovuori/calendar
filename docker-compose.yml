@@ -3,6 +3,16 @@ services:
     build:
       context: .
       dockerfile: cmd/calendar/Dockerfile
+      # Stamp the built binary (and, from there, config.yaml's written_by
+      # section on every save) with the git version/commit this image was
+      # built from. Export these before "docker compose up --build" to
+      # have them reflect your actual checkout, e.g.:
+      #   export VERSION=$(make -s print-version) VCS_REF=$(make -s print-commit)
+      # Left unset, they default to "dev"/"unknown" inside the Dockerfile.
+      # "make docker-build" does this for you in one step, without compose.
+      args:
+        VERSION: ${VERSION:-dev}
+        VCS_REF: ${VCS_REF:-unknown}
     image: calendar:latest
     ports:
       - "8080:8080"

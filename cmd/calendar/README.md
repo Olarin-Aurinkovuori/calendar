@@ -33,6 +33,17 @@ go build -o calendar ./cmd/calendar
 ./calendar -config config.yaml
 ```
 
+A plain `go build` leaves the binary reporting version `dev`/commit
+`unknown` (see `-version`). To stamp it with your actual git
+version/commit instead -- which also gets recorded in `config.yaml`'s
+`written_by` section every time it's saved, for future config migrations
+-- build via the repository-root `Makefile` instead:
+
+```sh
+make build         # -> ./calendar, linked with -X version.{Version,Commit}
+make docker-build  # same, inside the Docker image (see cmd/calendar/Dockerfile)
+```
+
 If `config.yaml` does not exist, it is created with sensible defaults on
 first run (admin user `admin` / password `change-me`, three example duty
 groups, Finnish/English UI strings, and Finnish flag days for 2026/2027).
@@ -76,6 +87,9 @@ matching what `-base-path /calendar` expects the application to see.)
   served under (e.g. `/calendar`), taking precedence over
   `server.base_path`. Leave empty (the default) to serve from the domain
   root.
+- `-version`: print the build version and commit (see `make build`/`make
+  docker-build` in the repository root for how these get stamped in) and
+  exit.
 - `-dump-default-config`: print the built-in default configuration as YAML
   to stdout and exit, without touching any configuration file.
 - `-dump-flag-days`: print the known flagging days (from the config file,

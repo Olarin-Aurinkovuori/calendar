@@ -18,6 +18,7 @@ import (
 
 	"github.com/Olarin-Aurinkovuori/calendar/internal/config"
 	"github.com/Olarin-Aurinkovuori/calendar/internal/flagdays"
+	"github.com/Olarin-Aurinkovuori/calendar/internal/version"
 	"github.com/Olarin-Aurinkovuori/calendar/internal/webapp"
 )
 
@@ -29,6 +30,7 @@ func main() {
 	configPath := flag.String("config", defaultPath, "path to the YAML configuration file (env CONFIG_PATH)")
 	listenAddr := flag.String("listen", "", "override the server listen address (host:port, e.g. :8080 or 0.0.0.0:9090); overrides server.listen_addr in the config file")
 	basePath := flag.String("base-path", "", "override the URL path prefix the application is served under (e.g. /calendar), for reverse-proxy deployments that share a host with other applications; overrides server.base_path in the config file. Leave empty (the default) to serve from the domain root")
+	showVersion := flag.Bool("version", false, "print the build version and commit and exit")
 	dumpDefaultConfig := flag.Bool("dump-default-config", false, "print the built-in default configuration as YAML to stdout and exit, without reading or writing any configuration file")
 	dumpFlagDays := flag.Bool("dump-flag-days", false, "print the known flagging days from the configuration file as YAML to stdout and exit")
 	dumpYear := flag.String("year", "", "with -dump-flag-days, restrict the dump to this single calendar year (e.g. 2026), fetching it first if not already known; if omitted, all known years are dumped")
@@ -36,6 +38,11 @@ func main() {
 	dumpEffectiveAssets := flag.String("dump-effective-assets", "", "write every template/static asset file as currently served -- on-disk overrides under the working directory where present, otherwise the built-in default -- under this directory and exit; the directory must not already exist")
 	trustProxyUserParam := flag.String("trust-proxy-user-param", "", "name of a URL query parameter (e.g. \"user\") that a trusted reverse proxy sets to the already-authenticated username, to offload /config authentication to the proxy; leave empty (the default) to require HTTP Basic Auth only. Only enable this if the proxy is the sole path to this server and controls/strips this parameter itself")
 	flag.Parse()
+
+	if *showVersion {
+		log.Printf("calendar %s (commit %s)", version.Version, version.Commit)
+		return
+	}
 
 	if *dumpEmbeddedAssets != "" {
 		if err := webapp.DumpEmbeddedAssets(*dumpEmbeddedAssets); err != nil {

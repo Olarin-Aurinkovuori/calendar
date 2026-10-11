@@ -12,6 +12,8 @@ import (
 	"sync"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/Olarin-Aurinkovuori/calendar/internal/version"
 )
 
 // Config is the root of the YAML configuration file.
@@ -25,6 +27,18 @@ type Config struct {
 	SpecialDates    []SpecialDate       `yaml:"special_dates"`
 	Weather         WeatherConfig       `yaml:"weather"`
 	Auth            AuthConfig          `yaml:"auth"`
+	// WrittenBy records which build of this application last wrote this
+	// file (see save()). It is stamped automatically on every save and
+	// is not meant to be hand-edited; it exists so a future config
+	// migration can tell which version/commit a given file was last
+	// written by.
+	WrittenBy WrittenByInfo `yaml:"written_by"`
+}
+
+// WrittenByInfo identifies the build that wrote a configuration file.
+type WrittenByInfo struct {
+	Version string `yaml:"version"`
+	Commit  string `yaml:"commit"`
 }
 
 // ServerConfig controls how the built-in HTTP server listens.
@@ -410,8 +424,12 @@ func (s *Store) Update(fn func(cfg *Config) error) error {
 }
 
 // save marshals the config to YAML and writes it atomically (temp file +
-// rename) so readers never observe a partially written file.
+// rename) so readers never observe a partially written file. It first
+// stamps WrittenBy with this running binary's version/commit (see
+// internal/version), so the file always reflects whichever build last
+// wrote it.
 func (s *Store) save() error {
+	s.cfg.WrittenBy = WrittenByInfo{Version: version.Version, Commit: version.Commit}
 	data, err := yaml.Marshal(s.cfg)
 	if err != nil {
 		return fmt.Errorf("marshalling config: %w", err)

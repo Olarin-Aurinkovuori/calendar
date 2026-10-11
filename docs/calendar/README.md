@@ -317,10 +317,21 @@ tooltip, showing that date's `title` text.
 
 ## CLI flags
 
-`-config`, `-listen`, `-base-path`, `-dump-default-config`,
+`-config`, `-listen`, `-base-path`, `-version`, `-dump-default-config`,
 `-dump-flag-days` (with `-year` to restrict to one year),
 `-dump-embedded-assets`/`-dump-effective-assets`, and
 `-trust-proxy-user-param`. See `cmd/calendar/README.md` for details.
+
+## Build/version stamping
+
+`internal/version` holds `Version`/`Commit`, overridden at link time via
+`-X` (default `dev`/`unknown` otherwise). `config.Store.save()` stamps
+every config.yaml write's `written_by.{version,commit}` with these, so a
+future migration can tell which build last wrote a given file. The
+repository-root `Makefile`'s `build`/`docker-build` targets derive
+`VERSION`/`VCS_REF` from `git describe`/`git rev-parse` and pass them
+through (`go build -ldflags` / `docker build --build-arg`, the latter
+needed because `.git` is excluded from the Docker build context).
 
 ## Docker image
 

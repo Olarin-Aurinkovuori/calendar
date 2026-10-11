@@ -20,10 +20,22 @@ RUN go mod download
 
 COPY . .
 
+# VERSION/VCS_REF identify this build in the running binary (and, from
+# there, get stamped into config.yaml's written_by section on every save,
+# for future config migrations); .git is excluded from the build context
+# (see .dockerignore), so these must be passed in from outside -- use
+# "make docker-build" (repo root Makefile) to do that automatically from
+# git, or pass them by hand:
+#   docker build --build-arg VERSION=$(git describe --tags --always --dirty) \
+#     --build-arg VCS_REF=$(git rev-parse HEAD) -f cmd/calendar/Dockerfile -t calendar .
+ARG VERSION=dev
+ARG VCS_REF=unknown
 ARG TARGETOS
 ARG TARGETARCH
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
-    go build -trimpath -ldflags="-s -w -extldflags=-static" \
+    go build -trimpath -ldflags="-s -w -extldflags=-static \
+    -X github.com/Olarin-Aurinkovuori/calendar/internal/version.Version=${VERSION} \
+    -X github.com/Olarin-Aurinkovuori/calendar/internal/version.Commit=${VCS_REF}" \
     -o /out/calendar ./cmd/calendar
 
 # ---------------------------------------------------------------------------
