@@ -269,11 +269,13 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 // activeWeatherNotices fetches (through s.weatherCache) the configured
 // forecast, if any, and returns the text of every condition that currently
 // evaluates true against it. It returns nil without fetching anything if
-// cfg.ForecastURLTemplate is empty (the feature is disabled), and logs --
-// rather than failing the page render -- fetch errors or individually
-// invalid condition expressions.
+// cfg.ForecastURLTemplate is empty (the feature is disabled) or no
+// conditions are configured (nothing could possibly be triggered, so there
+// is no point spending a request on the upstream forecast source), and
+// logs -- rather than failing the page render -- fetch errors or
+// individually invalid condition expressions.
 func (s *Server) activeWeatherNotices(r *http.Request, cfg config.WeatherConfig, now time.Time) []string {
-	if cfg.ForecastURLTemplate == "" {
+	if cfg.ForecastURLTemplate == "" || len(cfg.Conditions) == 0 {
 		return nil
 	}
 	samples, err := s.weatherCache.Get(r.Context(), weather.Config{

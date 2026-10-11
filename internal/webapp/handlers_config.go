@@ -184,10 +184,20 @@ func buildConfigData(r *http.Request, s *Server, cfg *config.Config, users []con
 		data.SpecialDateRows = append(data.SpecialDateRows, SpecialDateRow{SummaryIconScale: 1, DescriptionIconScale: 1})
 	}
 
-	data.ForecastURLTemplate = cfg.Weather.ForecastURLTemplate
-	data.Place = cfg.Weather.Place
-	data.LookaheadHours = cfg.Weather.LookaheadHours
-	data.RefreshIntervalHours = cfg.Weather.RefreshIntervalHours
+	weather := cfg.Weather
+	if weather.ForecastURLTemplate == "" {
+		// Weather hasn't been enabled (or this config.yaml predates the
+		// feature): pre-fill the form with the suggested defaults from
+		// the embedded default config so the admin sees a ready-to-use
+		// URL instead of a blank field, without silently writing
+		// anything to config.yaml -- it's only saved if they submit
+		// this form, leaving untouched configs genuinely untouched.
+		weather = config.Default().Weather
+	}
+	data.ForecastURLTemplate = weather.ForecastURLTemplate
+	data.Place = weather.Place
+	data.LookaheadHours = weather.LookaheadHours
+	data.RefreshIntervalHours = weather.RefreshIntervalHours
 	for _, c := range cfg.Weather.Conditions {
 		data.WeatherConditionRows = append(data.WeatherConditionRows, WeatherConditionRow{
 			Condition: c.Condition,
