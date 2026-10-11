@@ -225,5 +225,6 @@ table.schedule-table tr:hover .season-tooltip { display: block; }
 .specialdate-preview-live { margin-top: 0.5rem; }
 .specialdate-preview-live:empty { display: none; }
 .specialdate-delete-form { display: inline; }
-.specialdate-fields button.danger { align-self: flex-end; color: #c53030; border-color: #c53030; }
+button.danger { color: #c53030; border-color: #c53030; }
+.specialdate-fields button.danger { align-self: flex-end; }
 .specialdate-cleanup-form { margin-top: 0.75rem; }

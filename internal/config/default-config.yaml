@@ -84,6 +84,7 @@ languages:
             config_users_file_label: External users file
             config_users_file_placeholder: e.g. users.yaml
             config_users_heading: Administrators
+            config_weather_condition_delete: Delete
             config_weather_condition_expression: Condition expression
             config_weather_condition_expression_placeholder: "e.g. $MIN_TEMPERATURE <= 2"
             config_weather_condition_icon: Icon (emoji, image URL/path, or built-in name)
@@ -212,6 +213,7 @@ languages:
             config_users_file_label: Ulkoinen käyttäjätiedosto
             config_users_file_placeholder: esim. users.yaml
             config_users_heading: Pääkäyttäjät
+            config_weather_condition_delete: Poista
             config_weather_condition_expression: Ehtolauseke
             config_weather_condition_expression_placeholder: "esim. $MIN_TEMPERATURE <= 2"
             config_weather_condition_icon: Kuvake (emoji, kuvan URL/polku tai sisäänrakennettu nimi)
