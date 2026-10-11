@@ -1,0 +1,17 @@
+services:
+  calendar:
+    build:
+      context: .
+      dockerfile: cmd/handyman-duty/Dockerfile
+    image: calendar:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      # Everything the app reads/writes at runtime (config.yaml, any
+      # external auth-users/flag-day-year files it points to, and optional
+      # templates/ or static/ override directories) lives here, outside the
+      # container image.
+      - ./data:/data
+    environment:
+      - TZ=Europe/Helsinki
+    restart: unless-stopped

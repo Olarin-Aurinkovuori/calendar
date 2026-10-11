@@ -1,0 +1,50 @@
+# syntax=docker/dockerfile:1
+
+# Build this from the repository root (the build context must include
+# go.mod, go.sum, internal/, and cmd/handyman-duty/), e.g.:
+#   docker build -f cmd/handyman-duty/Dockerfile -t calendar .
+
+# ---------------------------------------------------------------------------
+# Build stage: compile a fully static binary (CGO disabled) so it can run
+# unmodified on the distroless "static" base below, which has no libc/shell.
+# ---------------------------------------------------------------------------
+FROM golang:1.26-alpine AS builder
+
+WORKDIR /src
+
+# Cache module downloads in their own layer, separate from source changes.
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+ARG TARGETOS
+ARG TARGETARCH
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
+    go build -trimpath -ldflags="-s -w -extldflags=-static" \
+    -o /out/calendar ./cmd/handyman-duty
+
+# ---------------------------------------------------------------------------
+# Runtime stage: distroless "static" -- just ca-certificates, tzdata, and a
+# /etc/passwd entry for the built-in "nonroot" (65532:65532) user. No shell,
+# no package manager, no HTTP client to exec a HEALTHCHECK with; rely on an
+# orchestrator-level TCP/HTTP probe against the published port instead.
+#
+# Everything the application reads or writes at runtime -- the YAML config
+# file, any external auth-users/flag-day-year files it references, and
+# optional template/static overrides -- lives under /data, a single volume
+# mount point kept entirely separate from the read-only application layer.
+# ---------------------------------------------------------------------------
+FROM gcr.io/distroless/static-debian12:nonroot
+
+COPY --from=builder /out/calendar /app/calendar
+
+ENV TZ=Europe/Helsinki \
+    CONFIG_PATH=/data/config.yaml
+
+WORKDIR /data
+VOLUME ["/data"]
+
+EXPOSE 8080
+
+ENTRYPOINT ["/app/calendar"]
