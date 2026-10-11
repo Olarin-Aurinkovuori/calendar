@@ -139,7 +139,8 @@ languages:
             today_label: "Today's date: %s"
             today_season_summer_info: "Summer: low probability for snow work"
             today_season_winter_info: "Winter: gritting duty if weather conditions require it"
-            upcoming_special_days_label: Upcoming special days
+            upcoming_special_days_label: Upcoming events
+            upcoming_special_days_subtitle: "next in %d day(s)"
             username_label: Username
             week_number_format: "%d"
     fi:
@@ -266,7 +267,8 @@ languages:
             today_label: "Tänään on %s"
             today_season_summer_info: "Kesä: lumityön todennäköisyys pieni"
             today_season_winter_info: "Hiekoitusvuoro kelien niin vaatiessa ja myös lumityövuoro mikäli sitä ehtii kertyä liikaa."
-            upcoming_special_days_label: Tulevat erikoispäivät
+            upcoming_special_days_label: Tulevat tapahtumat
+            upcoming_special_days_subtitle: "seuraava %d päivän päästä"
             username_label: Käyttäjätunnus
             week_number_format: "%d."
 duty:

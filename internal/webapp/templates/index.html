@@ -63,7 +63,7 @@
   {{if .UpcomingSpecial}}
   <h3 class="upcoming-special-heading">
     {{call .T "upcoming_special_days_label"}}
-    <span class="muted small">({{call .T "special_day_days_ahead" (index .UpcomingSpecial 0).DaysAhead}})</span>
+    <span class="muted small">({{call .T "upcoming_special_days_subtitle" (index .UpcomingSpecial 0).DaysAhead}})</span>
   </h3>
   <div class="special-upcoming-row">
     {{range .UpcomingSpecial}}
