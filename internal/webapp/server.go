@@ -27,11 +27,30 @@ var embeddedStaticFS embed.FS
 // deployment override any template or static asset (e.g. "templates/index.html"
 // or "static/style.css") by placing a same-named file/directory next to
 // where the binary runs, without needing to rebuild it.
+//
+// prefix confines on-disk lookups to names rooted under that directory
+// (e.g. "static", matching this instance's embed.FS namespace). This is
+// not just defense in depth: http.FileServer's own path-cleaning is
+// bypassable here. A request path containing a percent-encoded slash,
+// e.g. "/static/..%2fconfig.yaml", reaches net/http's internal serveFile
+// with r.URL.Path already decoded+cleaned down to just "/config.yaml" --
+// i.e. with the "static/" prefix entirely gone -- without ever tripping
+// http.ServeMux's own non-clean-path redirect (which only inspects the
+// still-escaped request path, where that path never looked unclean).
+// Verified live: without this prefix check, that request served the raw
+// config.yaml (including password hashes) with no authentication.
+// Rejecting any name that has lost its expected prefix (or isn't
+// fs.ValidPath to begin with) stops that leak at the source, regardless
+// of how such a name was constructed upstream.
 type overlayFS struct {
 	embedded embed.FS
+	prefix   string
 }
 
 func (o overlayFS) Open(name string) (fs.File, error) {
+	if !fs.ValidPath(name) || (name != o.prefix && !strings.HasPrefix(name, o.prefix+"/")) {
+		return nil, &fs.PathError{Op: "open", Path: name, Err: fs.ErrNotExist}
+	}
 	if f, err := os.Open(name); err == nil {
 		return f, nil
 	}
@@ -39,8 +58,8 @@ func (o overlayFS) Open(name string) (fs.File, error) {
 }
 
 var (
-	templateFS fs.FS = overlayFS{embedded: embeddedTemplateFS}
-	staticFS   fs.FS = overlayFS{embedded: embeddedStaticFS}
+	templateFS fs.FS = overlayFS{embedded: embeddedTemplateFS, prefix: "templates"}
+	staticFS   fs.FS = overlayFS{embedded: embeddedStaticFS, prefix: "static"}
 )
 
 // AssetOrigin reports whether one UI asset file (a template or static file)
